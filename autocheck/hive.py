@@ -1,3 +1,4 @@
+import os
 import requests
 
 from typing import Dict, List
@@ -10,10 +11,18 @@ urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class HiveAPI:
-    def __init__(self, username: str, password: str, hive_host: str):
-        self.hive_host = hive_host
+    def __init__(self):
+        USERNAME = os.environ.get('API_USER')
+        PASSWORD = os.environ.get('API_PASS')
+        HIVE_HOST = os.environ.get('HIVE_HOST')
+
+        assert USERNAME is not None and \
+               PASSWORD is not None and \
+               HIVE_HOST is not None and HIVE_HOST.lower().startswith('http')    
+
+        self.hive_host = HIVE_HOST
         self.session = requests.session()
-        self.token = self.login(username, password)
+        self.token = self.login(USERNAME, PASSWORD)
         self.headers = {"Authorization": f"Bearer {self.token}"}
 
     def login(self, username: str, password: str) -> str:

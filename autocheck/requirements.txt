@@ -2,4 +2,5 @@ argparse
 requests
 typing
 dataclasses
-enum
+pytest
+decorator
