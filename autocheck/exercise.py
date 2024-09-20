@@ -6,6 +6,7 @@ class Field:
     """Class representing a field in an exercise"""
     id: int
     name: str
+    has_value: bool
 
 @dataclass
 class Exercise:

@@ -11,7 +11,7 @@ def main():
     exercise: Exercise = get_exercise()
     
     if exit_code != 0:
-        contents = [ContentDescriptor('One or more of your autochecks failed!\nplease see autocheck logs for more info...', field.name) for field in exercise.fields]
+        contents = [ContentDescriptor('One or more of your autochecks failed!\nplease see autocheck logs for more info...', field.name) for field in exercise.fields if field.has_value]
         InputOutputJson.add_response('Hive-Tester-Framework', AutocheckResponse(contents, ResponseType.Redo, segel_only=True))
 
     InputOutputJson.write_output(exercise)

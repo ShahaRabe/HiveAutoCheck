@@ -58,7 +58,7 @@ class HiveAPI:
                                     headers=self.headers,
                                     verify=False)
         fields = response.json()
-        return [Field(field["id"], field["name"]) for field in fields]
+        return [Field(field["id"], field["name"], field["has_value"]) for field in fields]
 
 
     def get_exercise_by_id(self, exercise_id: int) -> Exercise:
