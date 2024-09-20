@@ -1,18 +1,28 @@
 import pytest
 
+from exercise import Exercise, FieldType
+from conftest import get_exercise
 from autocheck import AutocheckResponse, ContentDescriptor, ResponseType
 from autocheck import InputOutputJson
-from conftest import get_exercise
-from exercise import Exercise, FieldType
 
 
 def main():
     exit_code = pytest.main([])
     exercise: Exercise = get_exercise()
-    
+
     if exit_code != 0:
-        contents = [ContentDescriptor('One or more of your autochecks failed!\nplease see autocheck logs for more info...', field.name) for field in exercise.fields if field.has_value and field.type == FieldType.Text]
-        InputOutputJson.add_response('Hive-Tester-Framework', AutocheckResponse(contents, ResponseType.Redo, segel_only=True))
+        framework_error_message = '''One or more of your autochecks failed!
+please see autocheck logs for more info...'''
+
+        contents = [
+            ContentDescriptor(framework_error_message, field.name)
+            for field in exercise.fields if field.has_value and field.type == FieldType.Text
+        ]
+
+        InputOutputJson.add_response('Hive-Tester-Framework',
+                                     AutocheckResponse(contents,
+                                                       ResponseType.Redo,
+                                                       segel_only=True))
 
     InputOutputJson.write_output(exercise)
 

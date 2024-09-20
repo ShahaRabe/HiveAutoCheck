@@ -1,8 +1,8 @@
 import pytest
 
-from autocheck import InputOutputJson
 from hive import HiveAPI
 from exercise import Exercise
+from autocheck import InputOutputJson
 
 
 def get_exercise() -> Exercise:

@@ -25,7 +25,8 @@ class Exercise:
     fields: List[Field]
 
     def get_field_id(self, field_name: str) -> int:
-        fields_with_name: List[Field] = list(filter(lambda field: field.name == field_name, self.fields))
-        assert fields_with_name, f"No field named {field_name}"
+        fields_with_name: List[Field] = \
+            list(filter(lambda field: field.name == field_name, self.fields))
 
+        assert fields_with_name, f"No field named {field_name}"
         return fields_with_name[0].id

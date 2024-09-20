@@ -27,35 +27,30 @@ class AutocheckResponse:
     hide_checker_name: bool = True
 
 
-_test_responses: Dict[str, AutocheckResponse] = {}
-
-
 class InputOutputJson:
+    _test_responses: Dict[str, AutocheckResponse] = {}
     @staticmethod
     def input_json():
-        with open('/mnt/autocheck/input.json', 'r') as input_file:
+        with open('/mnt/autocheck/input.json', 'r', encoding='utf-8') as input_file:
             return json.load(input_file)
-    
+
 
     @staticmethod
     def add_response(function: str, response: AutocheckResponse) -> None:
-        global _test_responses
-        _test_responses[function] = response
-    
+        InputOutputJson._test_responses[function] = response
+
 
     @staticmethod
     def _get_contents_array(exercise: Exercise):
-        global _test_responses
-
         contents_by_field: Dict[int, List[str]] = {}
-        for test, response in _test_responses.items():
+        for test, response in InputOutputJson._test_responses.items():
             for desc in response.content_descriptors:
                 field_id: int = exercise.get_field_id(desc.field_name)
                 if field_id not in contents_by_field:
                     contents_by_field[field_id] = []
-                
+
                 contents_by_field[field_id].append(f'### {test}:\n{desc.content}')
-        
+
         return [
             {
                 "field": field_id,
@@ -66,11 +61,15 @@ class InputOutputJson:
 
     @staticmethod
     def write_output(exercise: Exercise) -> None:
-        global _test_responses
-        
-        response_type: ResponseType = ResponseType(max([resp.response_type.value for resp in _test_responses.values()]))
-        segel_only: bool = any([resp.segel_only for resp in _test_responses.values()])
-        hide_checker_name: bool = any([resp.hide_checker_name for resp in _test_responses.values()])
+        current_segel_only = (resp.segel_only for resp in InputOutputJson._test_responses.values())
+        current_response_types = \
+            (resp.response_type.value for resp in InputOutputJson._test_responses.values())
+        current_checker_name =\
+            (resp.hide_checker_name for resp in InputOutputJson._test_responses.values())
+
+        response_type: ResponseType = ResponseType(max(current_response_types))
+        segel_only: bool = any(current_segel_only)
+        hide_checker_name: bool = any(current_checker_name)
 
         data = {
             "contents": InputOutputJson._get_contents_array(exercise),
@@ -79,5 +78,5 @@ class InputOutputJson:
             "hide_checker_name": hide_checker_name,
         }
 
-        with open('/mnt/autocheck/output.json', 'w') as output_file:
+        with open('/mnt/autocheck/output.json', 'w', encoding='utf-8') as output_file:
             json.dump(data, output_file)
