@@ -3,4 +3,3 @@ requests
 typing
 dataclasses
 pytest
-decorator
