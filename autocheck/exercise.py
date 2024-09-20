@@ -1,5 +1,10 @@
 from dataclasses import dataclass
 from typing import List
+from enum import Enum
+
+class FieldType(Enum):
+    Text = 'text'
+    Number = 'number'
 
 @dataclass
 class Field:
@@ -7,6 +12,7 @@ class Field:
     id: int
     name: str
     has_value: bool
+    type: FieldType
 
 @dataclass
 class Exercise:
