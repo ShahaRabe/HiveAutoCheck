@@ -1,7 +1,7 @@
 import json
 
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Union
 from enum import IntEnum
 
 from exercise import Exercise
@@ -39,9 +39,10 @@ class InputOutputJson:
     def add_response(function: str, response: AutocheckResponse) -> None:
         InputOutputJson._test_responses[function] = response
 
-
+    
+    HiveFieldContentDict = Dict[str, Union[int, str]]
     @staticmethod
-    def _get_contents_array(exercise: Exercise):
+    def _get_contents_array(exercise: Exercise) -> List[HiveFieldContentDict]:
         contents_by_field: Dict[int, List[str]] = {}
         for test, response in InputOutputJson._test_responses.items():
             for desc in response.content_descriptors:
