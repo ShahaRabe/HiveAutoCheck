@@ -36,10 +36,15 @@ class InputOutputJson:
 
 
     @staticmethod
+    def file_name():
+        return InputOutputJson.input_json()['file_name']
+
+
+    @staticmethod
     def add_response(function: str, response: AutocheckResponse) -> None:
         InputOutputJson._test_responses[function] = response
 
-    
+
     HiveFieldContentDict = Dict[str, Union[int, str]]
     @staticmethod
     def _get_contents_array(exercise: Exercise) -> List[HiveFieldContentDict]:

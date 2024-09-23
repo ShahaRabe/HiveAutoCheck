@@ -1,12 +1,22 @@
+import os
 import pytest
 
 from exercise import Exercise, FieldType
-from conftest import get_exercise
+from conftest import get_exercise, get_submitted_file, ORIGINAL_SUBMITTED_FILE_PATH
 from autocheck import AutocheckResponse, ContentDescriptor, ResponseType
 from autocheck import InputOutputJson
 
 
+def save_and_unpack_attached_file():
+    file_content = get_submitted_file()
+    os.makedirs(ORIGINAL_SUBMITTED_FILE_PATH, exist_ok=True)
+    with open(ORIGINAL_SUBMITTED_FILE_PATH / InputOutputJson.file_name(), 'wb') as input_file:
+        input_file.write(file_content)
+
+
 def main():
+    save_and_unpack_attached_file()
+
     exit_code = pytest.main([])
     exercise: Exercise = get_exercise()
 

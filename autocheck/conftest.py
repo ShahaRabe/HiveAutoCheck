@@ -1,8 +1,15 @@
+import base64
+
+from pathlib import Path
+
 import pytest
 
 from hive import HiveAPI
 from exercise import Exercise
 from autocheck import InputOutputJson
+
+
+ORIGINAL_SUBMITTED_FILE_PATH: Path = Path('/tmp/exercise_files/original')
 
 
 def get_exercise() -> Exercise:
@@ -16,3 +23,17 @@ def get_exercise() -> Exercise:
 @pytest.fixture
 def exercise() -> Exercise:
     return get_exercise()
+
+
+def get_submitted_file() -> bytes:
+    return base64.b64decode(InputOutputJson.input_json()['file'])
+
+
+@pytest.fixture
+def submitted_file() -> bytes:
+    return get_submitted_file()
+
+
+@pytest.fixture
+def original_file_path() -> Path:
+    return ORIGINAL_SUBMITTED_FILE_PATH / InputOutputJson.file_name()
