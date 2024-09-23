@@ -1,28 +1,30 @@
-import os
+import pytest
 
-from hive import HiveAPI
-from exercise import Exercise
-from autocheck import InputOutputJson, ResponseType, ContentDescriptor
-
-USERNAME = os.environ.get('API_USER')
-PASSWORD = os.environ.get('API_PASS')
-HIVE_HOST = os.environ.get('HIVE_HOST')
+from exercise import Exercise, FieldType
+from conftest import get_exercise
+from autocheck import AutocheckResponse, ContentDescriptor, ResponseType
+from autocheck import InputOutputJson
 
 
 def main():
-    hive: HiveAPI = HiveAPI(USERNAME, PASSWORD, HIVE_HOST)
-    response = InputOutputJson.input_json()
+    exit_code = pytest.main([])
+    exercise: Exercise = get_exercise()
 
-    exercise_id: int = hive.get_exercise_id_by_assignment_id(response["assignment_id"])
-    exercise: Exercise = hive.get_exercise_by_id(exercise_id)
+    if exit_code != 0:
+        framework_error_message = '''One or more of your autochecks failed!
+please see autocheck logs for more info...'''
 
-    exercise_string_id = f"{exercise.subject_letter}_{exercise.subject_name}/{exercise.module_name}/{exercise.name}"                                   
+        contents = [
+            ContentDescriptor(framework_error_message, field.name)
+            for field in exercise.fields if field.has_value and field.type == FieldType.Text
+        ]
 
-    InputOutputJson.write_output(exercise,
-                                [ ContentDescriptor(exercise_string_id, "Comment") ],
-                                ResponseType.AutoCheck,
-                                segel_only=True,
-                                hide_checker_name=True)
+        InputOutputJson.add_response('Hive-Tester-Framework',
+                                     AutocheckResponse(contents,
+                                                       ResponseType.Redo,
+                                                       segel_only=True))
+
+    InputOutputJson.write_output(exercise)
 
 
 if __name__ == '__main__':
