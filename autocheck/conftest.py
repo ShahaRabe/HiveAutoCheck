@@ -10,6 +10,7 @@ from autocheck import InputOutputJson
 
 
 ORIGINAL_SUBMITTED_FILE_PATH: Path = Path('/tmp/exercise_files/original')
+EXTRACTED_FILE_PATH: Path = Path('/tmp/exercise_files/unpacked')
 
 
 def get_exercise() -> Exercise:
@@ -34,6 +35,15 @@ def submitted_file() -> bytes:
     return get_submitted_file()
 
 
+def get_original_file_path() -> Path:
+    return ORIGINAL_SUBMITTED_FILE_PATH / InputOutputJson.file_name()
+
+
 @pytest.fixture
 def original_file_path() -> Path:
-    return ORIGINAL_SUBMITTED_FILE_PATH / InputOutputJson.file_name()
+    return get_original_file_path()
+
+
+@pytest.fixture
+def extracted_files_path() -> Path:
+    return EXTRACTED_FILE_PATH

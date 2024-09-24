@@ -3,3 +3,4 @@ requests
 typing
 dataclasses
 pytest
+patool

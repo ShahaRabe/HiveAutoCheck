@@ -1,21 +1,38 @@
 import os
+
 import pytest
+import patoolib
 
 from exercise import Exercise, FieldType
-from conftest import get_exercise, get_submitted_file, ORIGINAL_SUBMITTED_FILE_PATH
+from conftest import get_exercise, \
+                     get_submitted_file, \
+                     get_original_file_path, \
+                     ORIGINAL_SUBMITTED_FILE_PATH, \
+                     EXTRACTED_FILE_PATH
+
 from autocheck import AutocheckResponse, ContentDescriptor, ResponseType
 from autocheck import InputOutputJson
 
 
-def save_and_unpack_attached_file():
+def save_attached_file() -> None:
     file_content = get_submitted_file()
     os.makedirs(ORIGINAL_SUBMITTED_FILE_PATH, exist_ok=True)
-    with open(ORIGINAL_SUBMITTED_FILE_PATH / InputOutputJson.file_name(), 'wb') as input_file:
+
+    with get_original_file_path().open('wb') as input_file:
         input_file.write(file_content)
 
 
+def extract_file_to_disk() -> None:
+    patoolib.extract_archive(str(get_original_file_path()), outdir=str(EXTRACTED_FILE_PATH))
+
+
+def setup_environment() -> None:
+    save_attached_file()
+    extract_file_to_disk()
+
+
 def main():
-    save_and_unpack_attached_file()
+    setup_environment()
 
     exit_code = pytest.main([])
     exercise: Exercise = get_exercise()

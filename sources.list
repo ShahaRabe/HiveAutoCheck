@@ -1,0 +1,9 @@
+# deb http://snapshot.debian.org/archive/debian/20240904T090000Z bullseye main
+deb http://deb.debian.org/debian bullseye main
+deb http://deb.debian.org/debian bullseye main non-free
+# deb http://snapshot.debian.org/archive/debian-security/20240904T090000Z bullseye-security main
+deb http://deb.debian.org/debian-security bullseye-security main
+deb http://deb.debian.org/debian-security bullseye-security main non-free
+# deb http://snapshot.debian.org/archive/debian/20240904T090000Z bullseye-updates main
+deb http://deb.debian.org/debian bullseye-updates main
+deb http://deb.debian.org/debian bullseye-updates main non-free
