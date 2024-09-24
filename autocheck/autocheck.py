@@ -1,8 +1,11 @@
 import json
+import base64
+import os
 
 from dataclasses import dataclass
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 from enum import IntEnum
+from pathlib import Path
 
 from exercise import Exercise
 
@@ -30,14 +33,27 @@ class AutocheckResponse:
 class InputOutputJson:
     _test_responses: Dict[str, AutocheckResponse] = {}
     @staticmethod
-    def input_json():
+    def input_json() -> Dict[str, Any]:
         with open('/mnt/autocheck/input.json', 'r', encoding='utf-8') as input_file:
             return json.load(input_file)
 
 
     @staticmethod
-    def file_name():
+    def file_name() -> str:
         return InputOutputJson.input_json()['file_name']
+
+
+    @staticmethod
+    def save_input_file_if_exists(dirname: Path) -> None:
+        file_name = InputOutputJson.file_name()
+        if not file_name:
+            return
+
+        os.makedirs(dirname, exist_ok=True)
+
+        content = base64.b64decode(InputOutputJson.input_json()['file'])
+        file_path = dirname / file_name
+        file_path.write_bytes(content)
 
 
     @staticmethod
