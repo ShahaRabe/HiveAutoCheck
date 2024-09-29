@@ -1,6 +1,5 @@
 import json
 import base64
-import os
 
 from dataclasses import dataclass
 from typing import List, Dict, Union, Any
@@ -49,7 +48,7 @@ class InputOutputJson:
         if not file_name:
             return
 
-        os.makedirs(dirname, exist_ok=True)
+        dirname.mkdir(parents=True, exist_ok=True)
 
         content = base64.b64decode(InputOutputJson.input_json()['file'])
         file_path = dirname / file_name

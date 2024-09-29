@@ -1,5 +1,3 @@
-import os
-
 from pathlib import Path
 from typing import Optional
 
@@ -68,7 +66,7 @@ def __extract_file_to_disk() -> None:
         # Not an archive or no file submitted
         return
 
-    os.makedirs(out_path, exist_ok=True)
+    out_path.mkdir(parents=True, exist_ok=True)
     patoolib.extract_archive(str(get_original_file_path()), outdir=str(out_path))
 
 
