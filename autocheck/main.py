@@ -1,12 +1,15 @@
 import pytest
 
 from exercise import Exercise, FieldType
-from conftest import get_exercise
+from conftest import get_exercise, setup_environment
+
 from autocheck import AutocheckResponse, ContentDescriptor, ResponseType
 from autocheck import InputOutputJson
 
 
 def main():
+    setup_environment()
+
     exit_code = pytest.main([])
     exercise: Exercise = get_exercise()
 

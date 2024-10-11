@@ -1,8 +1,10 @@
 import json
+import base64
 
 from dataclasses import dataclass
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 from enum import IntEnum
+from pathlib import Path
 
 from exercise import Exercise
 
@@ -28,23 +30,41 @@ class AutocheckResponse:
 
 
 class InputOutputJson:
-    _test_responses: Dict[str, AutocheckResponse] = {}
+    __test_responses: Dict[str, AutocheckResponse] = {}
     @staticmethod
-    def input_json():
+    def input_json() -> Dict[str, Any]:
         with open('/mnt/autocheck/input.json', 'r', encoding='utf-8') as input_file:
             return json.load(input_file)
 
 
     @staticmethod
-    def add_response(function: str, response: AutocheckResponse) -> None:
-        InputOutputJson._test_responses[function] = response
+    def file_name() -> str:
+        return InputOutputJson.input_json()['file_name']
 
-    
+
+    @staticmethod
+    def save_input_file_if_exists(dirname: Path) -> None:
+        file_name = InputOutputJson.file_name()
+        if not file_name:
+            return
+
+        dirname.mkdir(parents=True, exist_ok=True)
+
+        content = base64.b64decode(InputOutputJson.input_json()['file'])
+        file_path = dirname / file_name
+        file_path.write_bytes(content)
+
+
+    @staticmethod
+    def add_response(function: str, response: AutocheckResponse) -> None:
+        InputOutputJson.__test_responses[function] = response
+
+
     HiveFieldContentDict = Dict[str, Union[int, str]]
     @staticmethod
     def _get_contents_array(exercise: Exercise) -> List[HiveFieldContentDict]:
         contents_by_field: Dict[int, List[str]] = {}
-        for test, response in InputOutputJson._test_responses.items():
+        for test, response in InputOutputJson.__test_responses.items():
             for desc in response.content_descriptors:
                 field_id: int = exercise.get_field_id(desc.field_name)
                 if field_id not in contents_by_field:
@@ -62,11 +82,11 @@ class InputOutputJson:
 
     @staticmethod
     def write_output(exercise: Exercise) -> None:
-        current_segel_only = (resp.segel_only for resp in InputOutputJson._test_responses.values())
+        current_segel_only = (resp.segel_only for resp in InputOutputJson.__test_responses.values())
         current_response_types = \
-            (resp.response_type.value for resp in InputOutputJson._test_responses.values())
+            (resp.response_type.value for resp in InputOutputJson.__test_responses.values())
         current_checker_name =\
-            (resp.hide_checker_name for resp in InputOutputJson._test_responses.values())
+            (resp.hide_checker_name for resp in InputOutputJson.__test_responses.values())
 
         response_type: ResponseType = ResponseType(max(current_response_types))
         segel_only: bool = any(current_segel_only)
