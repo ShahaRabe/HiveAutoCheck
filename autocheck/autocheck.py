@@ -1,12 +1,11 @@
 import json
-import base64
 
 from dataclasses import dataclass
-from typing import List, Dict, Union, Any
-from enum import IntEnum
-from pathlib import Path
+from typing import List, Dict, Union, Optional, Any
+from enum import IntEnum, Enum
+from functools import wraps, partial
 
-from exercise import Exercise
+from exercise import Exercise, FieldType
 
 
 class ResponseType(IntEnum):
@@ -29,75 +28,98 @@ class AutocheckResponse:
     hide_checker_name: bool = True
 
 
-class InputOutputJson:
-    __test_responses: Dict[str, AutocheckResponse] = {}
-    @staticmethod
-    def input_json() -> Dict[str, Any]:
-        with open('/mnt/autocheck/input.json', 'r', encoding='utf-8') as input_file:
-            return json.load(input_file)
+__test_responses: Dict[str, AutocheckResponse] = {}
+HiveFieldContentDict = Dict[str, Union[int, str]]
 
 
-    @staticmethod
-    def file_name() -> str:
-        return InputOutputJson.input_json()['file_name']
+def __get_contents_array(exercise: Exercise, segel_only: bool) -> List[HiveFieldContentDict]:
+    contents_by_field: Dict[int, List[str]] = {}
+    for test, response in __test_responses.items():
+        if response.segel_only != segel_only:
+            continue
 
+        for desc in response.content_descriptors:
+            field_names = []
+            if desc.field_name is None:
+                field_names = [
+                    field.name
+                    for field in exercise.fields if field.has_value and field.type == FieldType.Text
+                ]
+            else:
+                field_names = [desc.field_name]
 
-    @staticmethod
-    def save_input_file_if_exists(dirname: Path) -> None:
-        file_name = InputOutputJson.file_name()
-        if not file_name:
-            return
-
-        dirname.mkdir(parents=True, exist_ok=True)
-
-        content = base64.b64decode(InputOutputJson.input_json()['file'])
-        file_path = dirname / file_name
-        file_path.write_bytes(content)
-
-
-    @staticmethod
-    def add_response(function: str, response: AutocheckResponse) -> None:
-        InputOutputJson.__test_responses[function] = response
-
-
-    HiveFieldContentDict = Dict[str, Union[int, str]]
-    @staticmethod
-    def _get_contents_array(exercise: Exercise) -> List[HiveFieldContentDict]:
-        contents_by_field: Dict[int, List[str]] = {}
-        for test, response in InputOutputJson.__test_responses.items():
-            for desc in response.content_descriptors:
-                field_id: int = exercise.get_field_id(desc.field_name)
+            for field_name in field_names:
+                field_id: int = exercise.get_field_id(field_name)
                 if field_id not in contents_by_field:
                     contents_by_field[field_id] = []
 
                 contents_by_field[field_id].append(f'### {test}:\n{desc.content}')
 
-        return [
-            {
-                "field": field_id,
-                "content": '\n\n'.join(field_contents)
-            } for field_id, field_contents in contents_by_field.items()
-        ]
+    return [
+        {
+            "field": field_id,
+            "content": '\n\n'.join(field_contents)
+        } for field_id, field_contents in contents_by_field.items()
+    ]
 
 
-    @staticmethod
-    def write_output(exercise: Exercise) -> None:
-        current_segel_only = (resp.segel_only for resp in InputOutputJson.__test_responses.values())
-        current_response_types = \
-            (resp.response_type.value for resp in InputOutputJson.__test_responses.values())
-        current_checker_name =\
-            (resp.hide_checker_name for resp in InputOutputJson.__test_responses.values())
+def __get_response_dict(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
+    test_responses = [resp for resp in __test_responses.values() if resp.segel_only == segel_only]
 
-        response_type: ResponseType = ResponseType(max(current_response_types))
-        segel_only: bool = any(current_segel_only)
-        hide_checker_name: bool = any(current_checker_name)
+    current_response_types = \
+        (resp.response_type.value for resp in test_responses)
+    current_checker_name =\
+        (resp.hide_checker_name for resp in test_responses)
 
-        data = {
-            "contents": InputOutputJson._get_contents_array(exercise),
-            "type": response_type.name,
-            "segel_only": segel_only,
-            "hide_checker_name": hide_checker_name,
-        }
+    response_type: ResponseType = ResponseType(max(current_response_types))
+    hide_checker_name: bool = any(current_checker_name)
 
-        with open('/mnt/autocheck/output.json', 'w', encoding='utf-8') as output_file:
-            json.dump(data, output_file)
+    return {
+        "contents": __get_contents_array(exercise, segel_only),
+        "type": response_type.name,
+        "segel_only": segel_only,
+        "hide_checker_name": hide_checker_name,
+    }
+
+
+def write_output(exercise: Exercise) -> None:
+    data = []
+
+    has_segel_only = any((res.segel_only for res in __test_responses.values()))
+    has_hanich_view = [res.segel_only for res in __test_responses.values() if res.segel_only is False] != []
+    if has_segel_only:
+        data.append(__get_response_dict(exercise, segel_only=True))
+    if has_hanich_view:
+        data.append(__get_response_dict(exercise, segel_only=False))
+
+    with open('/mnt/autocheck/output.json', 'w', encoding='utf-8') as output_file:
+        json.dump(data, output_file)
+
+
+def __add_error_response():
+    framework_error_message = '''One or more of your autochecks failed!
+please see autocheck logs for more info...'''
+
+    contents = [ ContentDescriptor(framework_error_message, None) ]
+
+    __test_responses['Hive-Tester-Framework'] = AutocheckResponse(contents,
+                                                                  ResponseType.Redo,
+                                                                  segel_only=True)
+
+
+def autocheck(func = None, *, test_title = None):
+    if func is None:
+        return partial(autocheck, test_title=test_title)
+
+    test_title = test_title or func.__name__
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            response: Optional[AutocheckResponse] = func(*args, **kwargs)
+            if response is not None:
+                __test_responses[test_title] = response
+        except:
+            __add_error_response()
+
+    return wrapper
