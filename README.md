@@ -2,7 +2,7 @@
 Here before you is a simple auto-checking infrasturcture for Hive.<br>
 For examples on how to use it please jump forward to [the examples](#some-examples)<br>
 ## Important Notes
-1. If some responses are marked as segel-only and some aren't than 2 responses would be posted - one for all the student facing responses and one for segel facing
+1. If some responses are marked as segel-only and some aren't then 2 responses would be posted - one for all the student facing responses and one for segel facing
 1. In the same category (segel only or student facing) there is a difference between the result (AutoCheck, Done or Redo) the most decisive is the one chosen (Redo, then Done and finaly AutoCheck).
 1. Same goes on hide checker name - if even one test chose to hide it it will be hidden
 1. Both segel-only and hide-checker-name default to True
@@ -11,7 +11,7 @@ Hello, happy to have you here.<br>
 This project was written after a little pain I experienced after being part of a course with insufficient auto checking and with the acknowledgement that Hive may provide a solid foundation to write auto checks but it has a long way to go to be intuitive, and that every course has a different view on creating an auto checking infrastructure.<br>
 # Technologies Chosen
 To integrate into hive's autochecks the obvious part was packing the whole system into a docker container.<br>
-And to make your lives easier in integrating this system into your course i chose to write it using python 3.12 and pytest (that looks at any python file not just the ones starting with test) with a bunch of prewritten fixtures.
+And to make your lives easier in integrating this system into your course I chose to write it using python 3.12 and pytest (that looks at any python file not just the ones starting with test) with a bunch of prewritten fixtures.
 So the minimum work you should do is write a single test with the `@autocheck` decorator and a Dockerfile that inherits from this project's image, sets a few environemnt variables and includes your amazing test files somewhere under `/test` inside the docker (preferably a subdirectory to avoid overwriting any of the files).
 # Wait... A bunch of fixtures?
 Yes, and a decorator! Here they are:<br>
