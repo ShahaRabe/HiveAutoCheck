@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Tuple
 
 import gitlab
-from urlpath import URL
+import urllib.parse
 
 
 class GitlabClient:
@@ -43,8 +43,10 @@ class GitlabClient:
 
     @staticmethod
     def __parse_url(url: str) -> Tuple[str, str]:
-        url_path = URL(url).parts
-        group_name = '/'.join(url_path[1:-1])
+        __URL_PATH_SEPARATOR = '/'
+        url_path_quoted_parts = urllib.parse.parseurl(url).path.split(__URL_PATH_SEPARATOR)
+        url_path = [urllib.parse.unquote(part) for part in url_path_quoted_parts]
+        group_name = __URL_PATH_SEPARATOR.join(url_path[1:-1])
         project_name = url_path[-1].split('.')[0]
 
         return group_name, project_name
