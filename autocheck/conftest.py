@@ -16,12 +16,12 @@ from hive import HiveAPI
 from input_json import InputJSON
 
 __ORIGINAL_FILE_DIRECTORY: Path = Path('/tmp/exercise_files/original')
-__TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'
+TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'
 
 
 def get_tests_to_run(exercise: Exercise) -> List[str]:
     exercise_relative_path: Path = Path(exercise.subject_name) / exercise.module_name
-    metadata_file_path: Path = __TESTS_FILES_DIRECTORY / 'metadata' / exercise_relative_path / 'tests_list.json'
+    metadata_file_path: Path = TESTS_FILES_DIRECTORY / 'metadata' / exercise_relative_path / 'tests_list.json'
 
     with open(metadata_file_path, 'r') as f:
         return json.load(f)[exercise.name]
@@ -68,8 +68,8 @@ def submitted_repository_url(input_json: InputJSON) -> str:
 
 @pytest.fixture(scope='session')
 def gitlab_client() -> GitlabClient:
-    gitlab_token: str = os.getenv('GITLAB_TOKEN')
-    gitlab_host: str = os.getenv('GITLAB_HOST')
+    gitlab_token: str = os.getenv('HANICH_GITLAB_TOKEN')
+    gitlab_host: str = os.getenv('HANICH_GITLAB_HOST')
     return GitlabClient(gitlab_host, gitlab_token)
 
 

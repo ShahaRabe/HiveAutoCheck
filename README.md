@@ -44,8 +44,12 @@ ENV HIVE_API_USER=<hive-user>
 ENV HIVE_API_PASS=<hive-password>
 ENV HIVE_HOST=https://<hive-ip>
 
-ENV GITLAB_HOST=https://<gitlab-host>
-ENV GITLAB_TOKEN=<gitlab-token>
+ENV HANICH_GITLAB_HOST=https://<hanich-gitlab-host>
+ENV HANICH_GITLAB_TOKEN=<hanich-gitlab-token>
+
+ENV SEGEL_GITLAB_HOST=https://<segel-gitlab-host>
+ENV SEGEL_GITLAB_TOKEN=<segel-gitlab-token>
+ENV TESTS_REPOSITORY_URL=<repository-url>
 
 ENTRYPOINT python3 main.py
 ```
