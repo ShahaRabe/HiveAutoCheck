@@ -16,7 +16,6 @@ from hive import HiveAPI
 from input_json import InputJSON
 
 __ORIGINAL_FILE_DIRECTORY: Path = Path('/tmp/exercise_files/original')
-__GITLAB_HOST: str = "http://gitlab.com"
 __TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'
 
 
@@ -66,14 +65,12 @@ def submitted_repository_url(input_json: InputJSON) -> str:
     return url
 
 
-@pytest.fixture(scope='session')
-def gitlab_token() -> str:
-    return os.getenv('GITLAB_TOKEN')
-
 
 @pytest.fixture(scope='session')
-def gitlab_client(gitlab_token: str) -> GitlabClient:
-    return GitlabClient(__GITLAB_HOST, gitlab_token)
+def gitlab_client() -> GitlabClient:
+    gitlab_token: str = os.getenv('GITLAB_TOKEN')
+    gitlab_host: str = os.getenv('GITLAB_HOST')
+    return GitlabClient(gitlab_host, gitlab_token)
 
 
 @pytest.fixture(scope='session')
@@ -85,8 +82,7 @@ def temp_directory() -> Generator[Path, None, None]:
 @pytest.fixture(scope='session')
 def cloned_repository(gitlab_client: GitlabClient,
                       submitted_repository_url: str,
-                      temp_directory: Path,
-                      gitlab_token: str) -> Path:
+                      temp_directory: Path) -> Path:
     gitlab_client.clone(submitted_repository_url, temp_directory, "main")
     return temp_directory
 

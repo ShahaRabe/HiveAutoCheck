@@ -44,6 +44,7 @@ ENV HIVE_API_USER=<hive-user>
 ENV HIVE_API_PASS=<hive-password>
 ENV HIVE_HOST=https://<hive-ip>
 
+ENV GITLAB_HOST=https://<gitlab-host>
 ENV GITLAB_TOKEN=<gitlab-token>
 
 ENTRYPOINT python3 main.py
