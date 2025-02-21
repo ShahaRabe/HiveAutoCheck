@@ -2,7 +2,7 @@ from typing import Optional
 
 import pytest
 
-from autocheck import autocheck, AutocheckResponse, ResponseType, ContentDescriptor
+from ..autocheck import autocheck, AutocheckResponse, ResponseType, ContentDescriptor
 
 
 @pytest.mark.stop_on_failure

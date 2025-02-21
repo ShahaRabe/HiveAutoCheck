@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional, Type
 
-from exercise import Exercise
-from compiler.exceptions import CompilationException
+from ..exercise import Exercise
+from .exceptions import CompilationException
 
 
 class Compiler(ABC):

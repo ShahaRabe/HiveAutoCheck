@@ -8,12 +8,12 @@ from typing import Optional, Generator, Dict, Any, List
 import patoolib
 import pytest
 
-from BlackboxTests.blackbox_test_config import BlackboxTestConfig
-from autocheck import write_output
-from exercise import Exercise
-from gitlab_client.gitlab_client import GitlabClient
-from hive import HiveAPI
-from input_json import InputJSON
+from .BlackboxTests.blackbox_test_config import BlackboxTestConfig
+from .autocheck import write_output
+from .exercise import Exercise
+from .gitlab_client.gitlab_client import GitlabClient
+from .hive import HiveAPI
+from .input_json import InputJSON
 
 __ORIGINAL_FILE_DIRECTORY: Path = Path('/tmp/exercise_files/original')
 TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'

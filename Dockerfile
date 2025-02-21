@@ -11,6 +11,9 @@ RUN apt-get install unrar -y
 COPY autocheck/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
+COPY dist/*.whl /tmp/autocheck.whl
+RUN python3 -m pip install /tmp/autocheck.whl
+
 COPY autocheck /test
 WORKDIR /test
 

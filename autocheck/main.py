@@ -3,10 +3,10 @@ import os
 
 import pytest
 
-from conftest import TESTS_FILES_DIRECTORY, get_input_file, get_exercise_from_input, get_tests_to_run
-from exercise import Exercise
-from input_json import InputJSON
-from gitlab_client.gitlab_client import GitlabClient
+from .conftest import TESTS_FILES_DIRECTORY, get_input_file, get_exercise_from_input, get_tests_to_run
+from .exercise import Exercise
+from .input_json import InputJSON
+from .gitlab_client.gitlab_client import GitlabClient
 
 
 def clone_tests_config() -> None:

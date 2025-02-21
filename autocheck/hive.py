@@ -6,7 +6,7 @@ import urllib3
 
 from urllib3.exceptions import InsecureRequestWarning
 
-from exercise import Exercise, Field, FieldType
+from .exercise import Exercise, Field, FieldType
 
 urllib3.disable_warnings(InsecureRequestWarning)
 

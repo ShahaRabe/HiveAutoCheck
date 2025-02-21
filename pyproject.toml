@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+requires-python = ">= 3.8"
+name = "hive_autocheck"
+dependencies = [
+    "argparse",
+    "requests",
+    "typing",
+    "dataclasses",
+    "pytest",
+    "patool",
+    "python-gitlab==2.10.0",
+]
+readme = "README.md"
+description = "A framework to easily create autocheck tests for Hive exercises"
+classifiers = [
+    "Private :: Do Not Upload",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "autocheck.__version__"}

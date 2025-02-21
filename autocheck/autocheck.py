@@ -4,8 +4,8 @@ from enum import IntEnum
 from functools import wraps, partial
 from typing import List, Dict, Union, Optional, Any
 
-from exercise import Exercise, FieldType
-from output_json import OutputJson
+from .exercise import Exercise, FieldType
+from .output_json import OutputJSON
 
 
 class ResponseType(IntEnum):
@@ -74,7 +74,7 @@ def __get_response_json(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
     response_type: ResponseType = ResponseType(max(current_response_types))
     hide_checker_name: bool = any(current_checker_name)
 
-    return asdict(OutputJson(contents=__get_contents_array(exercise, segel_only),
+    return asdict(OutputJSON(contents=__get_contents_array(exercise, segel_only),
                              type=response_type.name,
                              segel_only=segel_only,
                              hide_checker_name=hide_checker_name))
