@@ -4,3 +4,5 @@ typing
 dataclasses
 pytest
 patool
+python-gitlab==2.10.0
+urlpath==1.1.7

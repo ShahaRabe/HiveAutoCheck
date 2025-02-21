@@ -1,11 +1,11 @@
 import json
-
-from dataclasses import dataclass
-from typing import List, Dict, Union, Optional, Any
-from enum import IntEnum, Enum
+from dataclasses import dataclass, asdict
+from enum import IntEnum
 from functools import wraps, partial
+from typing import List, Dict, Union, Optional, Any
 
 from exercise import Exercise, FieldType
+from output_json import OutputJson
 
 
 class ResponseType(IntEnum):
@@ -63,7 +63,7 @@ def __get_contents_array(exercise: Exercise, segel_only: bool) -> List[HiveField
     ]
 
 
-def __get_response_dict(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
+def __get_response_json(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
     test_responses = [resp for resp in __test_responses.values() if resp.segel_only == segel_only]
 
     current_response_types = \
@@ -74,23 +74,21 @@ def __get_response_dict(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
     response_type: ResponseType = ResponseType(max(current_response_types))
     hide_checker_name: bool = any(current_checker_name)
 
-    return {
-        "contents": __get_contents_array(exercise, segel_only),
-        "type": response_type.name,
-        "segel_only": segel_only,
-        "hide_checker_name": hide_checker_name,
-    }
+    return asdict(OutputJson(contents=__get_contents_array(exercise, segel_only),
+                             type=response_type.name,
+                             segel_only=segel_only,
+                             hide_checker_name=hide_checker_name))
 
 
 def write_output(exercise: Exercise) -> None:
-    data = []
+    data: List[Dict[str, Any]] = []
 
     has_segel_only = any((res.segel_only for res in __test_responses.values()))
-    has_hanich_view = [res.segel_only for res in __test_responses.values() if res.segel_only is False] != []
+    has_hanich_view = any((not res.segel_only for res in __test_responses.values()))
     if has_segel_only:
-        data.append(__get_response_dict(exercise, segel_only=True))
+        data.append(__get_response_json(exercise, segel_only=True))
     if has_hanich_view:
-        data.append(__get_response_dict(exercise, segel_only=False))
+        data.append(__get_response_json(exercise, segel_only=False))
 
     with open('/mnt/autocheck/output.json', 'w', encoding='utf-8') as output_file:
         json.dump(data, output_file)
@@ -100,7 +98,7 @@ def __add_error_response():
     framework_error_message = '''One or more of your autochecks failed!
 please see autocheck logs for more info...'''
 
-    contents = [ ContentDescriptor(framework_error_message, None) ]
+    contents = [ContentDescriptor(framework_error_message, None)]
 
     __test_responses['Hive-Tester-Framework'] = AutocheckResponse(contents,
                                                                   ResponseType.Redo,
@@ -122,4 +120,26 @@ def autocheck(func = None, *, test_title = None):
         except:
             __add_error_response()
 
+    return wrapper
+
+
+def bool_to_response(boolean: bool) -> AutocheckResponse:
+    """
+    Basic transformation of boolean result to AutocheckResponse without specific content
+    Not fit for hanich's eyes
+    """
+    return AutocheckResponse([ContentDescriptor("Success!" if boolean else "Fail!", "Comment")],
+                             ResponseType.AutoCheck if boolean else ResponseType.Redo)
+
+
+def boolean_test(func=None):
+    """
+    Decorator to convert a boolean function to a test the can be fed to @autocheck
+    Uses bool_to_response, so also not fir for hanich's eyes
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        response: bool = func(*args, **kwargs)
+        return bool_to_response(response)
+    
     return wrapper

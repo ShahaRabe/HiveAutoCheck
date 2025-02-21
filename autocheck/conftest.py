@@ -1,39 +1,106 @@
-from pathlib import Path
-from typing import Optional, Generator, Dict, Any
-
 import base64
 import json
+import os.path
+import tempfile
+from pathlib import Path
+from typing import Optional, Generator, Dict, Any, List
+
 import patoolib
 import pytest
 
-from hive import HiveAPI
-from exercise import Exercise
+from BlackboxTests.blackbox_test_config import BlackboxTestConfig
 from autocheck import write_output
-
+from exercise import Exercise
+from gitlab_client.gitlab_client import GitlabClient
+from hive import HiveAPI
+from input_json import InputJSON
 
 __ORIGINAL_FILE_DIRECTORY: Path = Path('/tmp/exercise_files/original')
+__GITLAB_HOST: str = "http://gitlab.com"
+__TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'
 
 
-@pytest.fixture(scope='session')
-def input_json() -> Dict[str, Any]:
+def get_tests_to_run(exercise: Exercise) -> List[str]:
+    exercise_relative_path: Path = Path(exercise.subject_name) / exercise.module_name
+    metadata_file_path: Path = __TESTS_FILES_DIRECTORY / 'metadata' / exercise_relative_path / 'tests_list.json'
+
+    with open(metadata_file_path, 'r') as f:
+        return json.load(f)[exercise.name]
+
+
+def get_input_file() -> InputJSON:
     with open('/mnt/autocheck/input.json', 'r', encoding='utf-8') as input_file:
-        return json.load(input_file)
+        content: Dict[str, Any] = json.load(input_file)
+        return InputJSON(**content)
 
 
 @pytest.fixture(scope='session')
-def exercise(input_json: Dict[str, Any]) -> Exercise:
+def input_json() -> InputJSON:
+    return get_input_file()
+
+
+def get_exercise_from_input(input_json: InputJSON) -> Exercise:
     hive: HiveAPI = HiveAPI()
-    exercise_id: int = hive.get_exercise_id_by_assignment_id(input_json["assignment_id"])
+    exercise_id: int = hive.get_exercise_id_by_assignment_id(input_json.assignment_id)
     return hive.get_exercise_by_id(exercise_id)
 
 
 @pytest.fixture(scope='session')
-def original_file_path(input_json: Dict[str, Any]) -> Optional[Path]:
-    file_name = input_json['file_name']
+def exercise(input_json: InputJSON) -> Exercise:
+    return get_exercise_from_input(input_json)
+
+
+@pytest.fixture(scope='session')
+def original_file_path(input_json: InputJSON) -> Optional[Path]:
+    file_name = input_json.file_name
     if not file_name:
         return None
 
     return __ORIGINAL_FILE_DIRECTORY / file_name
+
+
+@pytest.fixture(scope='session')
+def submitted_repository_url(input_json: InputJSON) -> str:
+    entry_id: int = [entry for entry in input_json.form_fields if entry['name'] == 'repository url'][0]['id']
+    url: str = [entry for entry in input_json.contents if entry['field'] == entry_id][0]['content']
+    return url
+
+
+@pytest.fixture(scope='session')
+def gitlab_token() -> str:
+    return os.getenv('GITLAB_TOKEN')
+
+
+@pytest.fixture(scope='session')
+def gitlab_client(gitlab_token: str) -> GitlabClient:
+    return GitlabClient(__GITLAB_HOST, gitlab_token)
+
+
+@pytest.fixture(scope='session')
+def temp_directory() -> Generator[Path, None, None]:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        yield Path(temp_dir)
+
+
+@pytest.fixture(scope='session')
+def cloned_repository(gitlab_client: GitlabClient,
+                      submitted_repository_url: str,
+                      temp_directory: Path,
+                      gitlab_token: str) -> Path:
+    gitlab_client.clone(submitted_repository_url, temp_directory, "main")
+    return temp_directory
+
+
+@pytest.fixture(scope='session')
+def blackbox_test_configs(exercise: Exercise) -> List[BlackboxTestConfig]:
+    module_name: str = (exercise.name
+                        .replace(' ', '_')
+                        .replace('.', '_')
+                        .replace('\'', '')
+                        .lower())
+    
+    test_file_path: Path = Path('test_configs') / exercise.subject_name / 'config' / module_name
+    return BlackboxTestConfig.load_config_from_file(test_file_path)
 
 
 @pytest.fixture(scope='session')
@@ -55,13 +122,13 @@ def extracted_path(original_file_path: Optional[Path]) -> Optional[Path]:
 
 
 @pytest.fixture(scope='session')
-def __save_input_file(input_json: Dict[str, Any], original_file_path: Optional[Path]) -> None:
+def __save_input_file(input_json: InputJSON, original_file_path: Optional[Path]) -> None:
     if not original_file_path:
         return
 
     original_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    content = base64.b64decode(input_json['file'])
+    content = base64.b64decode(input_json.file)
     original_file_path.write_bytes(content)
 
 

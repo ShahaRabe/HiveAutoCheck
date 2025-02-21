@@ -22,11 +22,13 @@ signature: `@autocheck(test_title = None)`<br>
 ### Fixtures
 |Fixture|Type|Purpose|Scope|
 |-------|----|-------|-----|
-|`input_json`|`Dict[str, Any]`|Get the contents of the json given by Hive|Session|
+|`input_json`|`InputJSON`|Get the contents of the json given by Hive|Session|
 |`exercise`|`Exercise`|Use Hive's API to get info about the exercise|Session|
 |`original_file_path`|`Optional[Path]`|The path where the file, as submitted by the student, is saved - None if no file was submitted|Session|
 |`submitted_file`|`Optional[bytes]`|The contents of the file submitted by the student - None is no file was submitted|Session|
 |`extracted_path`|`Optional[Path]`|The path to which the contents of the file submitted by the student is extracted to - None if no file was submitted or the file submitted is not a archive|Session|
+
+More fixtures are defined in [conftest.py](autocheck/conftest.py), pertaining to git access, compilation and more
 # Tell me more about the tests themselves
 So as mentioned you have to use the `@autotest` decorator.<br>
 In addition you need to return an `AutocheckResponse` item that is defined in [autocheck.py](autocheck/autocheck.py).<br>
@@ -38,11 +40,13 @@ Examplary `autocheck.Dockerfile`:
 ```Dockerfile
 FROM autocheck:latest
 
-ENV API_USER=admin
-ENV API_PASS=admin
+ENV HIVE_API_USER=<hive-user>
+ENV HIVE_API_PASS=<hive-password>
 ENV HIVE_HOST=https://<hive-ip>
 
-COPY *.py /test/test_files
+ENV GITLAB_TOKEN=<gitlab-token>
+
+ENTRYPOINT python3 main.py
 ```
 Some tests:
 ```python
@@ -78,4 +82,18 @@ def test_files(submitted_file: Optional[bytes], original_file_path: Optional[Pat
         
     return AutocheckResponse([ ContentDescriptor('\n'.join(string), "Comment") ], ResponseType.AutoCheck if string[0] != 'What just happened?' else ResponseType.Redo)
 
+```
+# And Where Do I Put My Tests?
+Place your tests in a file (or files) under the [tests](tests) directory. Then under the [metadata](tests/metadata) folder create subfolders according to the path of the exercise in Hive (<subject>/<module>) and create a `json` file called `tests_list.json` which will contain an array of files or tests for each exercise.
+## Example `tests_list.json`
+```json
+{
+    "Foo": [
+        "test_files/tests/foo.py",
+        "test_files/tests/bar.py::test_baz"
+    ],
+    "Oof": [
+        "test_files/tests/oof.py::test_oof"
+    ]
+}
 ```

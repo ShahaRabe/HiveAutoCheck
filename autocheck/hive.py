@@ -13,8 +13,8 @@ urllib3.disable_warnings(InsecureRequestWarning)
 
 class HiveAPI:
     def __init__(self):
-        username = os.environ.get('API_USER')
-        password = os.environ.get('API_PASS')
+        username = os.environ.get('HIVE_API_USER')
+        password = os.environ.get('HIVE_API_PASS')
         hive_host = os.environ.get('HIVE_HOST')
 
         assert username is not None and \
@@ -25,7 +25,6 @@ class HiveAPI:
         self.session = requests.session()
         self.token = self.login(username, password)
         self.headers = {"Authorization": f"Bearer {self.token}"}
-
 
     def _get_api_response(self, api: str) -> requests.Response:
         return self.session.get(self.hive_host + api, headers=self.headers, verify=False)
@@ -47,17 +46,16 @@ class HiveAPI:
 
         return response.json()["access"]
 
-
     def get_exercise_id_by_assignment_id(self, assignemnt_id: int) -> int:
         response = self._get_api_response(f"/api/core/assignments/{assignemnt_id}")
+
         try:
             return response.json()["exercise"]
         except IndexError as ex:
             raise RuntimeError(f"assignment {assignemnt_id} does not exist") from ex
 
-
     def retrieve_exercise_fields_by_id(self, exercise_id) -> List[Field]:
-        response = self._get_api_response(f"/api/core/course/exercise/{exercise_id}/fields/")
+        response = self._get_api_response(f"/api/core/course/exercises/{exercise_id}/fields/")
         fields = response.json()
         return [
             Field(field["id"],
@@ -65,7 +63,6 @@ class HiveAPI:
                   field["has_value"],
                   FieldType(field['type'])) for field in fields
         ]
-
 
     def get_exercise_by_id(self, exercise_id: int) -> Exercise:
         response = self._get_api_response(f"/api/core/course/exercises/{exercise_id}")
