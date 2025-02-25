@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/windows-cssc/python:3.11-windows-ltsc2019
+FROM mcr.microsoft.com/windows-cssc/python:3.11-server-ltsc2022
 
 RUN mkdir /mnt/autocheck
 
