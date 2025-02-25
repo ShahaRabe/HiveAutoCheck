@@ -8,8 +8,7 @@ SHELL ["powershell", "-Command"]
 # Install Chocolatey (for package management)
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
-    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')); \
-    refreshenv
+    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'));
 
 # Install Python, 7-Zip, UnRAR, CMake, Make, Clang, GCC, G++, and MSVC using Chocolatey
 RUN choco install -y 7zip \
@@ -19,19 +18,6 @@ RUN choco install -y 7zip \
     llvm \
     mingw \
     visualstudio2022buildtools --package-parameters "--includeRecommended --passive --wait"
-
-# Refresh environment variables
-RUN refreshenv
-
-# Verify installations
-RUN python --version
-RUN 7z
-RUN unrar
-RUN cmake --version
-RUN make --version
-RUN clang --version
-RUN gcc --version
-RUN g++ --version
 
 RUN mkdir /tmp
 COPY autocheck/requirements.txt /tmp/requirements.txt
