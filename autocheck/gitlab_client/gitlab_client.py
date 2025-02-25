@@ -26,7 +26,7 @@ class GitlabClient:
 
         if group is None:
             logging.error(f"unable to get group from {url}")
-            raise Exception(f"Could not find group, non-Recoverable! {url=}")
+            raise Exception(f"Could not find group, non-Recoverable! {url=}, {group_name=}")
         
         project_id = self.find_project(group, project_name).id
         project = self.__client.projects.get(project_id)
@@ -44,16 +44,16 @@ class GitlabClient:
     @staticmethod
     def __parse_url(url: str) -> Tuple[str, str]:
         __URL_PATH_SEPARATOR = '/'
-        url_path_quoted_parts = urllib.parse.parseurl(url).path.split(__URL_PATH_SEPARATOR)
+        url_path_quoted_parts = urllib.parse.urlparse(url).path.split(__URL_PATH_SEPARATOR)
         url_path = [urllib.parse.unquote(part) for part in url_path_quoted_parts]
-        group_name = __URL_PATH_SEPARATOR.join(url_path[1:-1])
+        group_name = url_path[-2]
         project_name = url_path[-1].split('.')[0]
 
         return group_name, project_name
     
     @staticmethod
     def __get_files(project, branch_name: str, dir_path: Path) -> None:
-        for file_details in project.repository_tree(recursive=True, ref=branch_name):
+        for file_details in project.repository_tree(recursive=True, ref=branch_name, all=True):
             file_type = file_details['type']
             file_path = file_details['path']
             out_file_path: Path = dir_path / file_path

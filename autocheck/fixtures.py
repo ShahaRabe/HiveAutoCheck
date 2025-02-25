@@ -19,14 +19,6 @@ __ORIGINAL_FILE_DIRECTORY: Path = Path('/tmp/exercise_files/original')
 TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'
 
 
-def get_tests_to_run(exercise: Exercise) -> List[str]:
-    exercise_relative_path: Path = Path(exercise.subject_name) / exercise.module_name
-    metadata_file_path: Path = TESTS_FILES_DIRECTORY / 'metadata' / exercise_relative_path / 'tests_list.json'
-
-    with open(metadata_file_path, 'r') as f:
-        return json.load(f)[exercise.name]
-
-
 def get_input_file() -> InputJSON:
     with open('/mnt/autocheck/input.json', 'r', encoding='utf-8') as input_file:
         content: Dict[str, Any] = json.load(input_file)
@@ -115,32 +107,3 @@ def extracted_path(original_file_path: Optional[Path]) -> Optional[Path]:
         return None
 
     return Path('/tmp/exercise_files/unpacked')
-
-
-@pytest.fixture(scope='session')
-def __save_input_file(input_json: InputJSON, original_file_path: Optional[Path]) -> None:
-    if not original_file_path:
-        return
-
-    original_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    content = base64.b64decode(input_json.file)
-    original_file_path.write_bytes(content)
-
-
-@pytest.fixture(scope='session')
-def __extract_file_to_disk(original_file_path: Path,
-                           extracted_path: Optional[Path],
-                           __save_input_file: None) -> None:
-    if not extracted_path:
-        # Not an archive or no file submitted
-        return
-
-    extracted_path.mkdir(parents=True, exist_ok=True)
-    patoolib.extract_archive(str(original_file_path), outdir=str(extracted_path))
-
-
-@pytest.fixture(scope='session', autouse=True)
-def __setup_teardown(__extract_file_to_disk: None, exercise: Exercise) -> Generator:
-    yield
-    write_output(exercise)

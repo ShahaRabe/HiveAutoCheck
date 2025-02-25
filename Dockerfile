@@ -15,6 +15,6 @@ COPY dist/*.whl /tmp/autocheck.whl
 RUN python3 -m pip install /tmp/autocheck.whl
 
 COPY autocheck /test
-WORKDIR /test
+WORKDIR /
 
-ENTRYPOINT python3 main.py
+ENTRYPOINT python3 -m test

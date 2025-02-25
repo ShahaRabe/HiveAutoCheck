@@ -28,15 +28,15 @@ signature: `@autocheck(test_title = None)`<br>
 |`submitted_file`|`Optional[bytes]`|The contents of the file submitted by the student - None is no file was submitted|Session|
 |`extracted_path`|`Optional[Path]`|The path to which the contents of the file submitted by the student is extracted to - None if no file was submitted or the file submitted is not a archive|Session|
 
-More fixtures are defined in [conftest.py](autocheck/conftest.py), pertaining to git access, compilation and more
+More fixtures are defined in [fixtures.py](autocheck/fixtures.py), pertaining to git access, compilation and more
 # Tell me more about the tests themselves
-So as mentioned you have to use the `@autotest` decorator.<br>
+So as mentioned you have to use the `@autocheck` decorator.<br>
 In addition you need to return an `AutocheckResponse` item that is defined in [autocheck.py](autocheck/autocheck.py).<br>
 The test title (either a given title or the test name by default) MUST be unique as it's used as a dictionary key.<br>
 Anything beyond that is up to your imagination - go wild!<br>
 If any test throws you'd be noticed by a segel_only response by the infrastructure.
 # Some Examples
-Examplary `autocheck.Dockerfile`:
+Examplary `autocheck.Dockerfile` (note there is no entrypoint -- DO NOT override entrypoint):
 ```Dockerfile
 FROM autocheck:latest
 
@@ -50,8 +50,7 @@ ENV HANICH_GITLAB_TOKEN=<hanich-gitlab-token>
 ENV SEGEL_GITLAB_HOST=https://<segel-gitlab-host>
 ENV SEGEL_GITLAB_TOKEN=<segel-gitlab-token>
 ENV TESTS_REPOSITORY_URL=<repository-url>
-
-ENTRYPOINT python3 main.py
+ENV TESTS_REPOSITORY_REF=<repository-ref/branch-name>
 ```
 Some tests:
 ```python
