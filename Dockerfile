@@ -5,8 +5,8 @@ RUN mkdir /mnt/autocheck
 COPY sources.list /etc/apt/sources.list
 
 RUN apt-get update
-RUN apt-get install p7zip-full -y
-RUN apt-get install unrar -y
+RUN apt-get install -y p7zip-full unrar
+RUN apt-get install -y cmake clang 
 
 COPY autocheck/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt

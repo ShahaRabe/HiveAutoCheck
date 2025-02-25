@@ -1,19 +1,21 @@
-import base64
 import json
 import os.path
 import tempfile
 from pathlib import Path
-from typing import Optional, Generator, Dict, Any, List
+from typing import Optional, Generator, Dict, Any, List, Type
 
 import patoolib
 import pytest
 
 from .BlackboxTests.blackbox_test_config import BlackboxTestConfig
-from .autocheck import write_output
 from .exercise import Exercise
 from .gitlab_client.gitlab_client import GitlabClient
 from .hive import HiveAPI
 from .input_json import InputJSON
+from .compiler.compiler import Compiler
+from .compiler.exceptions import CompilationException
+from .compiler.make_compiler import MakeCompiler
+from .compiler.cmake_compiler import CMakeCompiler
 
 __ORIGINAL_FILE_DIRECTORY: Path = Path('/tmp/exercise_files/original')
 TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'
@@ -77,6 +79,24 @@ def cloned_repository(gitlab_client: GitlabClient,
                       temp_directory: Path) -> Path:
     gitlab_client.clone(submitted_repository_url, temp_directory, "main")
     return temp_directory
+
+def compile_and_get_executable_path(cloned_repository: Path, exercise: Exercise, compiler_type: Type[Compiler]) -> Path:
+    result, out, err = compiler_type.compile(cloned_repository, exercise.name)
+
+    if result == 0:
+        return compiler_type.find_executable_path(cloned_repository, exercise.name)
+
+    if err:
+        raise CompilationException("Solution build failed:\n{}".format(err))
+    raise CompilationException("Solution build failed:\n{}".format(out))
+
+@pytest.fixture(scope="session")
+def make_compiled_executable(cloned_repository: Path, exercise: Exercise) -> Path:
+    return compile_and_get_executable_path(cloned_repository, exercise, MakeCompiler)
+
+@pytest.fixture(scope="session")
+def cmake_compiled_executable(cloned_repository: Path, exercise: Exercise) -> Path:
+    return compile_and_get_executable_path(cloned_repository, exercise, CMakeCompiler)
 
 
 @pytest.fixture(scope='session')

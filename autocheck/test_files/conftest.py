@@ -1,4 +1,7 @@
+import base64
+
 from autocheck.fixtures import *
+from autocheck.autocheck import write_output
 
 
 @pytest.fixture(scope='session')
