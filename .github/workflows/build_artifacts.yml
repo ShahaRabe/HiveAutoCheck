@@ -19,17 +19,19 @@ jobs:
     - name: Install wheel build package
       run: python3 -m pip install build
     - name: Build the wheel
-      run: python -m build
+      run: python3 -m build
       
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag hive-autocheck:$(date +%Y%m%d)
+    - name: Add latest Tag
+      run: docker tag hive-autocheck:$(date +%Y%m%d) hive-autocheck:latest
     - name: Save the Docker image to a file
-      run: docker save -o ./hive-autocheck-image.tar.gz hive-autocheck:$(date +%Y%m%d)
+      run: docker save -o ./dist/hive-autocheck-image.tar.gz hive-autocheck:$(date +%Y%m%d) hive-autocheck:latest
 
-    - name: Upload Docker image
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: hive-autocheck
         path: |
-          ./hive-autocheck-image.tar.gz
+          ./dist/hive-autocheck-image.tar.gz
           ./dist/*.whl
