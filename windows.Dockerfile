@@ -20,12 +20,12 @@ RUN choco install -y 7zip \
 
 RUN mkdir /tmp
 COPY autocheck/requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install -r /tmp/requirements.txt
+RUN python -m pip install -r /tmp/requirements.txt
 
 COPY ./dist/*.whl /tmp/
-RUN python3 -m pip install /tmp/*.whl
+RUN python -m pip install /tmp/*.whl
 
 COPY autocheck /test
 WORKDIR /
 
-ENTRYPOINT python3 -m test
+ENTRYPOINT python -m test
