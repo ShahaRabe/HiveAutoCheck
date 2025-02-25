@@ -12,7 +12,6 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
 
 # Install Python, 7-Zip, UnRAR, CMake, Make, Clang, GCC, G++, and MSVC using Chocolatey
 RUN choco install -y 7zip \
-    unrar \
     cmake \
     make \
     llvm \
