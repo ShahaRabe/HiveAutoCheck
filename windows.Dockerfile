@@ -23,7 +23,7 @@ COPY autocheck/requirements.txt /tmp/requirements.txt
 RUN python -m pip install -r /tmp/requirements.txt
 
 COPY ./dist/*.whl /tmp/
-RUN python -m pip install /tmp/*.whl
+RUN python -m pip install /tmp/hive_autocheck-0.1.0-py3-none-any.whl
 
 COPY autocheck /test
 WORKDIR /
