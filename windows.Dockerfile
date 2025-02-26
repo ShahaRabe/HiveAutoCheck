@@ -1,6 +1,27 @@
-FROM mcr.microsoft.com/windows-cssc/python:3.11-server-ltsc2022
+FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022
 
-RUN mkdir /mnt/autocheck
+# Restore the default Windows shell for correct batch processing.
+SHELL ["cmd", "/S", "/C"]
+RUN mkdir C:\tmp
+
+RUN \
+    # Download the Build Tools bootstrapper.
+    curl -SL --output C:\tmp\vs_buildtools.exe https://aka.ms/vs/17/release/vs_buildtools.exe \
+    \
+    # Install Build Tools with the Microsoft.VisualStudio.Workload.VCTools workload, excluding workloads and components with known issues.
+    && (start /w C:\tmp\vs_buildtools.exe --quiet --wait --norestart --nocache \
+        --installPath "%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools" \
+        --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended \
+        --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 \
+        --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 \
+        --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 \
+        --remove Microsoft.VisualStudio.Component.Windows81SDK \
+        || IF "%ERRORLEVEL%"=="3010" EXIT 0) \
+    \
+    # Cleanup
+    && del /q C:\tmp\vs_buildtools.exe
+
+RUN setx Path "%Path%;%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
 
 # Set PowerShell as the default shell
 SHELL ["powershell", "-Command"]
@@ -15,14 +36,9 @@ RUN choco install -y 7zip \
     cmake \
     make \
     llvm \
-    mingw \
-    visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional --passive --wait"
+    mingw
 
-ENV VSINSTALLDIR="C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools"
-ENV VisualStudioDir="C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools"
-ENV Path="${VSINSTALLDIR}\\MSVC\\14.30.30705\\bin\\Hostx64\\x64;${Path}"
-
-RUN mkdir /tmp
+RUN mkdir /mnt/autocheck
 COPY autocheck/requirements.txt /tmp/requirements.txt
 RUN python -m pip install -r /tmp/requirements.txt
 
@@ -31,5 +47,6 @@ RUN python -m pip install /tmp/hive_autocheck-0.1.0-py3-none-any.whl
 
 COPY autocheck /test
 WORKDIR /
+
 
 ENTRYPOINT python -m test
