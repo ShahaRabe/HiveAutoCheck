@@ -16,7 +16,11 @@ RUN choco install -y 7zip \
     make \
     llvm \
     mingw \
-    visualstudio2022buildtools --package-parameters "--includeRecommended --passive --wait"
+    visualstudio2022buildtools --version=17.4.0 --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional --passive --wait"
+
+ENV VSINSTALLDIR="C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools"
+ENV VisualStudioDir="C:\\Program Files\\Microsoft Visual Studio\\2022\\BuildTools"
+ENV Path="${VSINSTALLDIR}\\MSVC\\14.30.30705\\bin\\Hostx64\\x64;${Path}"
 
 RUN mkdir /tmp
 COPY autocheck/requirements.txt /tmp/requirements.txt
