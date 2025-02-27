@@ -20,7 +20,7 @@ RUN \
 
 FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022 as builder
 
-RUN mkdir "C:\Program Files\Microsoft Visual Studio\2022"
+RUN (mkdir "C:\Program Files\Microsoft Visual Studio\2022" || IF "%ERRORLEVEL%"=="1" EXIT 0)
 COPY --from=vs_installer "C:\Program Files\Microsoft Visual Studio\2022\BuildTools" "C:\Program Files\Microsoft Visual Studio\2022\BuildTools"
 COPY --from=vs_installer "C:\Program Files (x86)\Windows Kits" "C:\Program Files (x86)\Windows Kits"
 COPY --from=vs_installer "C:\Program Files" "C:\Program Files"
