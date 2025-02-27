@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022
+FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022 as vs_installer
 
 # Restore the default Windows shell for correct batch processing.
 SHELL ["cmd", "/S", "/C"]
@@ -16,11 +16,15 @@ RUN \
         --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 \
         --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 \
         --remove Microsoft.VisualStudio.Component.Windows81SDK \
-        || IF "%ERRORLEVEL%"=="3010" EXIT 0) \
-    \
-    # Cleanup
-    && del /q C:\tmp\vs_buildtools.exe
+        || IF "%ERRORLEVEL%"=="3010" EXIT 0)
 
+FROM mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022 as builder
+
+RUN mkdir "C:\Program Files\Microsoft Visual Studio\2022"
+COPY --from=vs_installer "C:\Program Files\Microsoft Visual Studio\2022\BuildTools" "C:\Program Files\Microsoft Visual Studio\2022\BuildTools"
+COPY --from=vs_installer "C:\Program Files (x86)\Windows Kits" "C:\Program Files (x86)\Windows Kits"
+COPY --from=vs_installer "C:\Program Files" "C:\Program Files"
+COPY --from=vs_installer "C:\Program Files (x86)" "C:\Program Files (x86)"
 RUN setx Path "%Path%;%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
 
 # Set PowerShell as the default shell
@@ -39,6 +43,7 @@ RUN choco install -y 7zip \
     mingw
 
 RUN mkdir /mnt/autocheck
+RUN mkdir /tmp
 COPY autocheck/requirements.txt /tmp/requirements.txt
 RUN python -m pip install -r /tmp/requirements.txt
 
