@@ -35,7 +35,7 @@ def main():
     input_json_file: InputJSON = get_input_file()
     exercise_data: Exercise = get_exercise_from_input(input_json_file)
     tests: List[str] = get_tests_to_run(exercise_data)
-    pytest.main(tests)
+    pytest.main(["--rootdir", TESTS_FILES_DIRECTORY] + tests)
 
 
 if __name__ == '__main__':
