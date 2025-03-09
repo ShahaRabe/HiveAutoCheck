@@ -77,7 +77,7 @@ def temp_directory() -> Generator[Path, None, None]:
 def cloned_repository(gitlab_client: GitlabClient,
                       submitted_repository_url: str,
                       temp_directory: Path) -> Path:
-    gitlab_client.clone(submitted_repository_url, temp_directory, "main")
+    gitlab_client.clone(submitted_repository_url, temp_directory, "dev")
     return temp_directory
 
 def compile_and_get_executable_path(cloned_repository: Path, exercise: Exercise, compiler_type: Type[Compiler]) -> Path:
