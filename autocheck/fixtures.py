@@ -54,9 +54,7 @@ def original_file_path(input_json: InputJSON) -> Optional[Path]:
 
 @pytest.fixture(scope='session')
 def submitted_repository_url(input_json: InputJSON) -> str:
-    entry_id: int = [entry for entry in input_json.form_fields if entry['name'] == 'repository url'][0]['id']
-    url: str = [entry for entry in input_json.contents if entry['field'] == entry_id][0]['content']
-    return url
+    return input_json.get_field_content("repository_url")
 
 
 
