@@ -2,6 +2,7 @@ from typing import List
 from pathlib import Path
 import json
 import os
+import logging
 
 import pytest
 
@@ -9,6 +10,10 @@ from .fixtures import TESTS_FILES_DIRECTORY, get_input_file, get_exercise_from_i
 from .exercise import Exercise
 from .input_json import InputJSON
 from .gitlab_client.gitlab_client import GitlabClient
+
+
+def logging_level() -> int:
+    return getattr(logging, os.getenv('LOGGING_LEVEL') or 'WARNING')
 
 
 def clone_tests_config() -> None:
@@ -30,6 +35,8 @@ def get_tests_to_run(exercise: Exercise) -> List[str]:
 
 
 def main():
+    logging.basicConfig(level=logging_level())
+
     clone_tests_config()
 
     input_json_file: InputJSON = get_input_file()
