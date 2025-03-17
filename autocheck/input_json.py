@@ -29,3 +29,16 @@ class InputJSON:
     in the Hive sources.
     """
     user_gender: Literal["Male", "Female", "NonBinary"]
+
+    def get_field_content(self, field_name: str) -> Optional[str]:
+        entries = list(
+            filter(lambda entry: entry["name"] == field_name, self.form_fields)
+        )
+        if len(entries) == 0:
+            return None
+
+        entry_id: int = entries[0]["id"]
+        content: str = next(
+            filter(lambda entry: entry["field"] == entry_id, self.contents)
+        )["content"]
+        return content

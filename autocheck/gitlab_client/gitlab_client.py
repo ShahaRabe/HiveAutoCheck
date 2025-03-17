@@ -6,12 +6,20 @@ import gitlab
 import urllib.parse
 
 
+__URL_PATH_SEPARATOR = '/'
+
+
 class GitlabClient:
     def __init__(self, host: str, private_token: str):
         self.__client = gitlab.Gitlab(host, private_token=private_token, ssl_verify=False)
     
     def find_group(self, group_name: str):
         groups = self.__client.groups.list(search=group_name)
+        if len(groups) == 0:
+            # Gitlab sucks
+            possible_group_name = group_name.split(__URL_PATH_SEPARATOR)[-1]
+            groups = self.__client.groups.list(search=possible_group_name)
+
         return groups[0] if len(groups) > 0 else None
     
     def find_user(self, user_name: str):
@@ -43,10 +51,9 @@ class GitlabClient:
 
     @staticmethod
     def __parse_url(url: str) -> Tuple[str, str]:
-        __URL_PATH_SEPARATOR = '/'
         url_path_quoted_parts = urllib.parse.urlparse(url).path.split(__URL_PATH_SEPARATOR)
         url_path = [urllib.parse.unquote(part) for part in url_path_quoted_parts]
-        group_name = url_path[-2]
+        group_name = __URL_PATH_SEPARATOR.join(url_path[1:-1])
         project_name = url_path[-1].split('.')[0]
 
         return group_name, project_name
