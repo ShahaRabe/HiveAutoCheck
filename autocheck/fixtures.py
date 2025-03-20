@@ -21,15 +21,24 @@ __ORIGINAL_FILE_DIRECTORY: Path = Path('/tmp/exercise_files/original')
 TESTS_FILES_DIRECTORY: Path = Path(os.path.dirname(os.path.realpath(__file__))) / 'test_files'
 
 
-def get_input_file() -> InputJSON:
-    with open('/mnt/autocheck/input.json', 'r', encoding='utf-8') as input_file:
-        content: Dict[str, Any] = json.load(input_file)
-        return InputJSON(**content)
+def get_json_file(file_name: str) -> Dict[str, Any]:
+    with open(file_name, 'r', encoding='utf-8') as input_file:
+        return json.load(input_file)
 
 
 @pytest.fixture(scope='session')
 def input_json() -> InputJSON:
-    return get_input_file()
+    return InputJSON(**get_json_file('/mnt/autocheck/input.json'))
+
+
+@pytest.fixture(scope='session')
+def metadata_json() -> Dict[str, Any]:
+    return get_json_file('/mnt/autocheck/metadata.json')
+
+
+@pytest.fixture(scope='session')
+def on_creation_data(metadata_json: Dict[str, Any]) -> Dict[str, str]:
+    return metadata_json['on_creation_data']
 
 
 def get_exercise_from_input(input_json: InputJSON) -> Exercise:
@@ -57,6 +66,10 @@ def submitted_repository_url(input_json: InputJSON) -> str:
     return input_json.get_field_content("repository_url")
 
 
+@pytest.fixture(scope='session')
+def submitted_repository_branch(on_creation_data: Dict[str, str]) -> str:
+    return on_creation_data['GitWorkingBranch']  # TODO: Fix key in 'on_creation_data'
+
 
 @pytest.fixture(scope='session')
 def gitlab_client() -> GitlabClient:
@@ -74,8 +87,9 @@ def temp_directory() -> Generator[Path, None, None]:
 @pytest.fixture(scope='session')
 def cloned_repository(gitlab_client: GitlabClient,
                       submitted_repository_url: str,
+                      submitted_repository_branch: str,
                       temp_directory: Path) -> Path:
-    gitlab_client.clone(submitted_repository_url, temp_directory, "main")
+    gitlab_client.clone(submitted_repository_url, temp_directory, submitted_repository_branch)
     return temp_directory
 
 def compile_and_get_executable_path(cloned_repository: Path, exercise: Exercise, compiler_type: Type[Compiler]) -> Path:
