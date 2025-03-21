@@ -4,12 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 dynamic = ["version"]
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 name = "hive_autocheck"
 dependencies = [
     "argparse",
     "requests",
-    "typing",
     "dataclasses",
     "pytest",
     "patool",
@@ -21,5 +20,35 @@ classifiers = [
     "Private :: Do Not Upload",
 ]
 
+[dependency-groups]
+dev = ["mypy>=1.11.2,<2", "types_requests"]
+
+[tool.mypy]
+# Ensure full coverage
+disallow_untyped_calls = 1
+disallow_untyped_defs = 1
+disallow_incomplete_defs = 1
+disallow_untyped_decorators = 1
+check_untyped_defs = 1
+
+# Restrict dynamic typing
+disallow_any_generics = 1
+disallow_subclassing_any = 1
+warn_return_any = 1
+
+# Know exactly what you're doing
+warn_redundant_casts = 1
+warn_unused_ignores = 1
+warn_unused_configs = 1
+warn_unreachable = 1
+show_error_codes = 1
+
+# Explicit is better than implicit
+no_implicit_optional = 1
+
+# Prevent modules from being skipped
+ignore_missing_imports = 0
+disallow_any_unimported = 1
+
 [tool.setuptools.dynamic]
-version = {attr = "autocheck.__version__"}
+version = { attr = "autocheck.__version__" }

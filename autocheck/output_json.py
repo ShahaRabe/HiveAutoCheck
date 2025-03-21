@@ -1,10 +1,23 @@
 from dataclasses import dataclass, field
-from typing import List, Literal
+from enum import Enum
+from typing import List, Dict, Any
+
+HiveFieldContentDict = Dict[str, int | str]
+
+
+class ResponseType(Enum):
+    AutoCheck = "AutoCheck"
+    Done = "Done"
+    Redo = "Redo"
+
+    def __lt__(self, other: Any) -> bool:
+        ordering = {ResponseType.AutoCheck: 0, ResponseType.Done: 1, ResponseType.Redo: 2}
+        return ordering[self] < ordering[other]
 
 
 @dataclass(frozen=True)
 class OutputJSON:
-    type: Literal["AutoCheck", "Done", "Redo"]
+    type: ResponseType
     segel_only: bool = True
     hide_checker_name: bool = True
-    contents: List = field(default_factory=list)
+    contents: List[HiveFieldContentDict] = field(default_factory=list)

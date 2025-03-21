@@ -6,7 +6,7 @@ from autocheck.autocheck import write_output
 
 @pytest.fixture(scope='session')
 def __save_input_file(input_json: InputJSON, original_file_path: Optional[Path]) -> None:
-    if not original_file_path:
+    if not original_file_path or not input_json.file:
         return
 
     original_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -28,6 +28,6 @@ def __extract_file_to_disk(original_file_path: Path,
 
 
 @pytest.fixture(scope='session', autouse=True)
-def __setup_teardown(__extract_file_to_disk: None, exercise: Exercise) -> Generator:
+def __setup_teardown(__extract_file_to_disk: None, exercise: Exercise) -> Generator[None]:
     yield
     write_output(exercise)

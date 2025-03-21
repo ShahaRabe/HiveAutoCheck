@@ -53,15 +53,17 @@ def original_file_path(input_json: InputJSON) -> Optional[Path]:
 
 
 @pytest.fixture(scope='session')
-def submitted_repository_url(input_json: InputJSON) -> str:
+def submitted_repository_url(input_json: InputJSON) -> str | None:
     return input_json.get_field_content("repository_url")
 
 
 
 @pytest.fixture(scope='session')
 def gitlab_client() -> GitlabClient:
-    gitlab_token: str = os.getenv('HANICH_GITLAB_TOKEN')
-    gitlab_host: str = os.getenv('HANICH_GITLAB_HOST')
+    gitlab_token = os.getenv('HANICH_GITLAB_TOKEN')
+    gitlab_host = os.getenv('HANICH_GITLAB_HOST')
+    if gitlab_token is None or gitlab_host is None:
+        raise Exception("Missing hanich gitlab env variables")
     return GitlabClient(gitlab_host, gitlab_token)
 
 
@@ -85,8 +87,8 @@ def compile_and_get_executable_path(cloned_repository: Path, exercise: Exercise,
         return compiler_type.find_executable_path(cloned_repository, exercise.name)
 
     if err:
-        raise CompilationException("Solution build failed:\n{}".format(err))
-    raise CompilationException("Solution build failed:\n{}".format(out))
+        raise CompilationException("Solution build failed:\n{}".format(err.decode()))
+    raise CompilationException("Solution build failed:\n{}".format(out.decode()))
 
 @pytest.fixture(scope="session")
 def make_compiled_executable(cloned_repository: Path, exercise: Exercise) -> Path:
