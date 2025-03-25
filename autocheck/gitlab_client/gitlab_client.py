@@ -17,7 +17,7 @@ class GitlabClient:
         groups = self.__client.groups.list(search=group_name)
         if len(groups) == 0:
             # Gitlab sucks
-            possible_group_name = group_name.split(__URL_PATH_SEPARATOR)[-1]
+            possible_group_name = group_name.split(_URL_PATH_SEPARATOR)[-1]
             groups = self.__client.groups.list(search=possible_group_name)
 
         return groups[0] if len(groups) > 0 else None
@@ -51,9 +51,9 @@ class GitlabClient:
 
     @staticmethod
     def __parse_url(url: str) -> Tuple[str, str]:
-        url_path_quoted_parts = urllib.parse.urlparse(url).path.split(__URL_PATH_SEPARATOR)
+        url_path_quoted_parts = urllib.parse.urlparse(url).path.split(_URL_PATH_SEPARATOR)
         url_path = [urllib.parse.unquote(part) for part in url_path_quoted_parts]
-        group_name = __URL_PATH_SEPARATOR.join(url_path[1:-1])
+        group_name = _URL_PATH_SEPARATOR.join(url_path[1:-1])
         project_name = url_path[-1].split('.')[0]
 
         return group_name, project_name
