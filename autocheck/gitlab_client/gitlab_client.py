@@ -6,7 +6,7 @@ import gitlab
 import urllib.parse
 
 
-__URL_PATH_SEPARATOR = '/'
+_URL_PATH_SEPARATOR = '/'
 
 
 class GitlabClient:
