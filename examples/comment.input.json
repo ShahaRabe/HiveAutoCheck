@@ -1,0 +1,33 @@
+{
+  "file": null,
+  "file_name": "",
+  "contents": [
+    {
+      "content": "\u05d4\u05d9\u05d9!\n\u05d4\u05e6\u05dc\u05d7\u05ea\u05d9 \u05d4\u05db\u05dc?",
+      "field": 122
+    }
+  ],
+  "form_fields": [
+    {
+      "id": 122,
+      "exercise": 89,
+      "name": "Comment",
+      "description": "",
+      "type": "text",
+      "order": 0,
+      "required": false,
+      "staff_responses": true,
+      "hanich_responses": true,
+      "has_value": true,
+      "lower_limit": null,
+      "upper_limit": null,
+      "choices": null,
+      "segel_only": false,
+      "metadata": {},
+      "groups": []
+    }
+  ],
+  "assignment_id": 1,
+  "user_gender": "Female",
+  "description": null
+}
