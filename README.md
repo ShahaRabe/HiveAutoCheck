@@ -40,6 +40,8 @@ Examplary `autocheck.Dockerfile` (note there is no entrypoint -- DO NOT override
 ```Dockerfile
 FROM autocheck:latest
 
+COPY metadata.json /mnt/autocheck/metadata.json
+
 ENV HIVE_API_USER=<hive-user>
 ENV HIVE_API_PASS=<hive-password>
 ENV HIVE_HOST=https://<hive-ip>
