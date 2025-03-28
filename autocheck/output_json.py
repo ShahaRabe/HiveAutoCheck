@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import List, Dict, Any
 
 HiveFieldContentDict = Dict[str, int | str]
 
 
-class ResponseType(Enum):
+class ResponseType(StrEnum):
     AutoCheck = "AutoCheck"
     Done = "Done"
     Redo = "Redo"

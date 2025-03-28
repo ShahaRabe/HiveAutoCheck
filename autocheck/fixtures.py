@@ -36,7 +36,9 @@ def input_json() -> InputJSON:
 
 
 def get_exercise_from_input(input_json: InputJSON) -> Exercise:
-    hive: HiveAPI = HiveAPI()
+    hive = HiveAPI(
+        str(settings.hive_host), settings.hive_api_user, settings.hive_api_pass
+    )
     exercise_id: int = hive.get_exercise_id_by_assignment_id(input_json.assignment_id)
     return hive.get_exercise_by_id(exercise_id)
 

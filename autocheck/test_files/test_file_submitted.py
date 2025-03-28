@@ -8,7 +8,7 @@ from autocheck.autocheck import (
 )
 
 
-@autocheck(test_title="Hey!")
+@autocheck(test_title="File Submission")
 def test_file_submitted(submitted_file: Optional[bytes]) -> AutocheckResponse:
     """
     Tests that the hanich submitted a file.

@@ -1,16 +1,12 @@
-import functools
-
-import typing
-
-
 import json
 import wrapt
 from dataclasses import dataclass, asdict
 from functools import wraps
-from typing import List, Dict, Any, Callable
+from typing import Any, Callable
 
 from .exercise import Exercise, FieldType
 from .output_json import OutputJSON, HiveFieldContentDict, ResponseType
+from .settings import settings
 
 
 @dataclass
@@ -21,19 +17,19 @@ class ContentDescriptor:
 
 @dataclass
 class AutocheckResponse:
-    content_descriptors: List[ContentDescriptor]
+    content_descriptors: list[ContentDescriptor]
     response_type: ResponseType
     segel_only: bool = True
     hide_checker_name: bool = True
 
 
-__test_responses: Dict[str, AutocheckResponse] = {}
+__test_responses: dict[str, AutocheckResponse] = {}
 
 
 def __get_contents_array(
     exercise: Exercise, segel_only: bool
-) -> List[HiveFieldContentDict]:
-    contents_by_field: Dict[int, List[str]] = {}
+) -> list[HiveFieldContentDict]:
+    contents_by_field: dict[int, list[str]] = {}
     for test, response in __test_responses.items():
         if response.segel_only != segel_only:
             continue
@@ -61,7 +57,7 @@ def __get_contents_array(
     ]
 
 
-def __get_response_json(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
+def __get_response_json(exercise: Exercise, segel_only: bool) -> dict[str, Any]:
     test_responses = [
         resp for resp in __test_responses.values() if resp.segel_only == segel_only
     ]
@@ -69,8 +65,8 @@ def __get_response_json(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
     current_response_types = (resp.response_type for resp in test_responses)
     current_checker_name = (resp.hide_checker_name for resp in test_responses)
 
-    response_type: ResponseType = max(current_response_types)
-    hide_checker_name: bool = any(current_checker_name)
+    response_type = max(current_response_types)
+    hide_checker_name = any(current_checker_name)
 
     return asdict(
         OutputJSON(
@@ -83,7 +79,7 @@ def __get_response_json(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
 
 
 def write_output(exercise: Exercise) -> None:
-    data: List[Dict[str, Any]] = []
+    data: list[dict[str, Any]] = []
 
     has_segel_only = any((res.segel_only for res in __test_responses.values()))
     has_hanich_view = any((not res.segel_only for res in __test_responses.values()))
@@ -92,12 +88,12 @@ def write_output(exercise: Exercise) -> None:
     if has_hanich_view:
         data.append(__get_response_json(exercise, segel_only=False))
 
-    with open("/mnt/autocheck/output.json", "w", encoding="utf-8") as output_file:
+    with open(settings.hive_output_json_path, "w", encoding="utf-8") as output_file:
         json.dump(data, output_file)
 
 
 def __add_error_response() -> None:
-    framework_error_message = """One or more of your autochecks failed!\nPlease see autocheck logs for more info..."""
+    framework_error_message = "One or more of your autochecks failed!\nPlease see autocheck logs for more info..."
 
     contents = [ContentDescriptor(framework_error_message, None)]
 
@@ -106,20 +102,17 @@ def __add_error_response() -> None:
     )
 
 
-TestFunction = Callable[..., AutocheckResponse | None]
-
-
-def autocheck[**P, R](
-    wrapped: Callable[P, R] | None = None, *, test_title: str | None = None
-) -> Callable[P, R]:
-    # https://wrapt.readthedocs.io/en/master/decorators.html#decorators-with-optional-arguments
-    if wrapped is None:
-        return functools.partial(autocheck, test_title=test_title)
-
+def autocheck(
+    *, test_title: str | None = None
+) -> Callable[..., AutocheckResponse | None]:
+    # https://wrapt.readthedocs.io/en/master/decorators.html#decorators-with-arguments
     @wrapt.decorator
     def wrapper(
-        wrapped: Callable[P, R], _: object | None, args: P.args, kwargs: P.kwargs
-    ) -> R:
+        wrapped: Callable[..., AutocheckResponse | None],
+        _: object | None,
+        args: tuple[str, ...],
+        kwargs: dict[str, Any],
+    ) -> AutocheckResponse | None:
         try:
             response = wrapped(*args, **kwargs)
             if response is not None:
@@ -129,7 +122,7 @@ def autocheck[**P, R](
             __add_error_response()
             return None
 
-    return wrapper(wrapped)
+    return wrapper
 
 
 def bool_to_response(boolean: bool) -> AutocheckResponse:
@@ -150,7 +143,7 @@ def boolean_test(func: Callable[..., bool]) -> Callable[..., AutocheckResponse]:
     """
 
     @wraps(func)
-    def wrapper(*args: tuple[Any, ...], **kwargs: Dict[str, Any]) -> AutocheckResponse:
+    def wrapper(*args: tuple[Any, ...], **kwargs: dict[str, Any]) -> AutocheckResponse:
         response: bool = func(*args, **kwargs)
         return bool_to_response(response)
 

@@ -1,4 +1,3 @@
-import os
 from typing import Dict, List
 
 import requests
@@ -12,27 +11,14 @@ urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class HiveAPI:
-    def __init__(self) -> None:
-        username = os.environ.get("HIVE_API_USER")
-        password = os.environ.get("HIVE_API_PASS")
-        hive_host = os.environ.get("HIVE_HOST")
-
-        assert (
-            username is not None
-            and password is not None
-            and hive_host is not None
-            and hive_host.lower().startswith("http")
-        )
-
-        self.hive_host = hive_host
+    def __init__(self, host: str, username: str, password: str) -> None:
+        self.host = host
         self.session = requests.session()
         self.token = self.login(username, password)
         self.headers = {"Authorization": f"Bearer {self.token}"}
 
     def _get_api_response(self, api: str) -> requests.Response:
-        return self.session.get(
-            self.hive_host + api, headers=self.headers, verify=False
-        )
+        return self.session.get(self.host + api, headers=self.headers, verify=False)
 
     def login(self, username: str, password: str) -> str:
         """
@@ -41,12 +27,12 @@ class HiveAPI:
         @param password: The password to log in with
         """
         cred: Dict[str, str] = {"username": username, "password": password}
-        response = self.session.get(self.hive_host + "/api/auth/session", verify=False)
+        response = self.session.get(self.host + "/api/auth/session", verify=False)
         if response.status_code != 200:
             raise RuntimeError("Failed to login to hive!")
 
         response = self.session.post(
-            self.hive_host + "/api/core/token/", json=cred, verify=False
+            self.host + "/api/core/token/", json=cred, verify=False
         )
         if response.status_code != 200:
             raise RuntimeError("Failed to get token!")

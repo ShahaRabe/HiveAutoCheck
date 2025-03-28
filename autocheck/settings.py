@@ -1,4 +1,5 @@
 from pathlib import Path
+from pydantic import HttpUrl
 
 from pydantic_settings import BaseSettings
 
@@ -13,9 +14,14 @@ class Settings(BaseSettings):
     tests_repository_url: str
     tests_repository_ref: str
 
-    logging_level: str = "WARNING"
+    hive_host: HttpUrl
+    hive_api_user: str
+    hive_api_pass: str
 
     hive_input_json_path: Path = Path("/mnt/autocheck/input.json'")
+    hive_output_json_path: Path = Path("/mnt/autocheck/output.json'")
+
+    logging_level: str = "WARNING"
 
 
 settings = Settings()
