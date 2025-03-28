@@ -1,47 +1,45 @@
 from typing import List
 from pathlib import Path
 import json
-import os
 import logging
 
 import pytest
 
+from .settings import settings
 from .fixtures import TESTS_FILES_DIRECTORY, get_input_file, get_exercise_from_input
 from .exercise import Exercise
 from .input_json import InputJSON
 from .gitlab_client.gitlab_client import GitlabClient
 
 
-def logging_level() -> int:
-    return int(getattr(logging, os.getenv('LOGGING_LEVEL') or 'WARNING'))
-
-
-def clone_tests_config() -> None:
-    segel_gitlab_host = os.getenv('SEGEL_GITLAB_HOST')
-    segel_gitlab_token = os.getenv('SEGEL_GITLAB_TOKEN')
-
-    tests_repo_url = os.getenv('TESTS_REPOSITORY_URL')
-    tests_repo_ref = os.getenv('TESTS_REPOSITORY_REF')
-
-    if segel_gitlab_host is None or segel_gitlab_token is None or tests_repo_ref is None or tests_repo_url is None:
-        raise Exception("Please configure git settings for tests repo")
-
-    segel_gitlab_client = GitlabClient(segel_gitlab_host, segel_gitlab_token)
-    segel_gitlab_client.clone(tests_repo_url, TESTS_FILES_DIRECTORY, tests_repo_ref)
+def clone_tests_repository(
+    gitlab_host: str, gitlab_token: str, repository_url: str, repository_ref: str
+) -> None:
+    segel_gitlab_client = GitlabClient(gitlab_host, gitlab_token)
+    segel_gitlab_client.clone(repository_url, TESTS_FILES_DIRECTORY, repository_ref)
 
 
 def get_tests_to_run(exercise: Exercise) -> List[str]:
     exercise_relative_path: Path = Path(exercise.subject_name) / exercise.module_name
-    metadata_file_path: Path = TESTS_FILES_DIRECTORY / 'metadata' / exercise_relative_path / 'tests_list.json'
+    metadata_file_path: Path = (
+        TESTS_FILES_DIRECTORY / "metadata" / exercise_relative_path / "tests_list.json"
+    )
 
-    with open(metadata_file_path, 'r') as f:
-        return [str(TESTS_FILES_DIRECTORY / test) for test in json.load(f)[exercise.name]]
+    with open(metadata_file_path, "r") as f:
+        return [
+            str(TESTS_FILES_DIRECTORY / test) for test in json.load(f)[exercise.name]
+        ]
 
 
 def main() -> None:
-    logging.basicConfig(level=logging_level())
+    logging.basicConfig(level=int(getattr(logging, settings.logging_level)))
 
-    clone_tests_config()
+    clone_tests_repository(
+        settings.segel_gitlab_host,
+        settings.segel_gitlab_token,
+        settings.tests_repository_url,
+        settings.tests_repository_ref,
+    )
 
     input_json_file: InputJSON = get_input_file()
     exercise_data: Exercise = get_exercise_from_input(input_json_file)
@@ -49,5 +47,5 @@ def main() -> None:
     pytest.main(["--rootdir", str(TESTS_FILES_DIRECTORY), "-o", "log_cli=1"] + tests)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

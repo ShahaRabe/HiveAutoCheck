@@ -1,9 +1,14 @@
 from typing import Optional
 
-from autocheck.autocheck import autocheck, AutocheckResponse, ResponseType, ContentDescriptor
+from autocheck.autocheck import (
+    autocheck,
+    AutocheckResponse,
+    ResponseType,
+    ContentDescriptor,
+)
 
 
-@autocheck(test_title="File Submission")
+@autocheck(test_title="Hey!")
 def test_file_submitted(submitted_file: Optional[bytes]) -> AutocheckResponse:
     """
     Tests that the hanich submitted a file.
@@ -12,4 +17,8 @@ def test_file_submitted(submitted_file: Optional[bytes]) -> AutocheckResponse:
     if submitted_file is not None:
         return AutocheckResponse([], ResponseType.AutoCheck)
 
-    return AutocheckResponse([ContentDescriptor("No File Submitted!", "Comment")], ResponseType.Redo, segel_only=False)
+    return AutocheckResponse(
+        [ContentDescriptor("No File Submitted!", "Comment")],
+        ResponseType.Redo,
+        segel_only=False,
+    )

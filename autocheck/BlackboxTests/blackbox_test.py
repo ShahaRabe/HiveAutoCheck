@@ -18,7 +18,9 @@ class TestResult:
 
 
 @contextlib.contextmanager
-def additional_files_context(additional_files: Dict[Path, Path] | None, working_directory: Path) -> Generator[None]:
+def additional_files_context(
+    additional_files: Dict[Path, Path] | None, working_directory: Path
+) -> Generator[None, None, None]:
     files: Dict[Path, Path] = additional_files or {}
     for src_file, dst_file in files.items():
         shutil.copy2(src_file, working_directory / dst_file)
@@ -31,7 +33,9 @@ class BlackboxTest:
     __DEFAULT_EXECUTABLE_TIMEOUT = 1 * 60
 
     @staticmethod
-    def check_excepted_output(test_config: BlackboxTestConfig, solution_output: str) -> TestResult:
+    def check_excepted_output(
+        test_config: BlackboxTestConfig, solution_output: str
+    ) -> TestResult:
         solution_output = solution_output.replace("\r", "")  # ignore CR ("\r")
 
         # search for all outputs in order
@@ -42,22 +46,28 @@ class BlackboxTest:
 
             NOT_FOUND_INDEX: int = -1
             if found_index == NOT_FOUND_INDEX:
-                descriptive_error_message: str = (f"Test case '{test_config.description}'\n"
-                                                  f"Input: {test_config.input}\n"
-                                                  f"The output {expected_output.strip()} is not in your program output\n")
+                descriptive_error_message: str = (
+                    f"Test case '{test_config.description}'\n"
+                    f"Input: {test_config.input}\n"
+                    f"The output {expected_output.strip()} is not in your program output\n"
+                )
 
-                error_message: str = test_config.custom_error_message or descriptive_error_message
+                error_message: str = (
+                    test_config.custom_error_message or descriptive_error_message
+                )
                 return TestResult(is_success=False, output=error_message)
 
             last_found_output_index = found_index
 
         return TestResult(is_success=True)
 
-    def run_executable_with_timeout(self,
-                                    program: str,
-                                    timeout_in_seconds: int,
-                                    program_cmdline_args: Optional[List[str]] = None,
-                                    stdin_string: Optional[str] = None) -> None:
+    def run_executable_with_timeout(
+        self,
+        program: str,
+        timeout_in_seconds: int,
+        program_cmdline_args: Optional[List[str]] = None,
+        stdin_string: Optional[str] = None,
+    ) -> None:
         self.process = None
         self.stdout = None
         self.err = None
@@ -72,11 +82,13 @@ class BlackboxTest:
             if program_cmdline_args:
                 cmdline += program_cmdline_args
 
-            self.process = subprocess.Popen(cmdline,
-                                            stdin=subprocess.PIPE,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE,
-                                            universal_newlines=True)
+            self.process = subprocess.Popen(
+                cmdline,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
             self.stdout, self.err = self.process.communicate(stdin_string)
 
         thread = threading.Thread(target=target)
@@ -90,32 +102,47 @@ class BlackboxTest:
             thread.join()
             self.reach_timeout = True
 
-    def run_test(self,
-                 program: str,
-                 test_configs: List[BlackboxTestConfig],
-                 working_directory: Path,
-                 timeout_in_seconds: int = __DEFAULT_EXECUTABLE_TIMEOUT) -> TestResult:
+    def run_test(
+        self,
+        program: str,
+        test_configs: List[BlackboxTestConfig],
+        working_directory: Path,
+        timeout_in_seconds: int = __DEFAULT_EXECUTABLE_TIMEOUT,
+    ) -> TestResult:
         logging.info("Entered test_blackbox")
 
         for test in test_configs:
             logging.info(f"Running {program} with input {test.input}")
 
-            with additional_files_context(test.additional_files_mapping, working_directory):
-                self.run_executable_with_timeout(program,
-                                                 timeout_in_seconds=timeout_in_seconds,
-                                                 program_cmdline_args=test.cmdline_args,
-                                                 stdin_string=' '.join(test.input))
+            with additional_files_context(
+                test.additional_files_mapping, working_directory
+            ):
+                self.run_executable_with_timeout(
+                    program,
+                    timeout_in_seconds=timeout_in_seconds,
+                    program_cmdline_args=test.cmdline_args,
+                    stdin_string=" ".join(test.input),
+                )
 
             if self.reach_timeout:
-                return TestResult(is_success=False, output=f"Running timed out after {timeout_in_seconds} seconds.")
+                return TestResult(
+                    is_success=False,
+                    output=f"Running timed out after {timeout_in_seconds} seconds.",
+                )
 
             assert self.process is not None
             if self.process.returncode != 0:
-                program_input_text: str = f"with the input {test.input}" if test.input else "with no input"
-                return TestResult(is_success=False,
-                                  output=f"Running the program {program_input_text} failed with the result code {self.process.returncode}.")
+                program_input_text: str = (
+                    f"with the input {test.input}" if test.input else "with no input"
+                )
+                return TestResult(
+                    is_success=False,
+                    output=f"Running the program {program_input_text} failed with the result code {self.process.returncode}.",
+                )
 
-            test_result: TestResult = BlackboxTest.check_excepted_output(test, self.stdout or "")
+            test_result: TestResult = BlackboxTest.check_excepted_output(
+                test, self.stdout or ""
+            )
             if not test_result.is_success:
                 return test_result
 

@@ -11,7 +11,11 @@ class ResponseType(Enum):
     Redo = "Redo"
 
     def __lt__(self, other: Any) -> bool:
-        ordering = {ResponseType.AutoCheck: 0, ResponseType.Done: 1, ResponseType.Redo: 2}
+        ordering = {
+            ResponseType.AutoCheck: 0,
+            ResponseType.Done: 1,
+            ResponseType.Redo: 2,
+        }
         return ordering[self] < ordering[other]
 
 

@@ -1,8 +1,13 @@
+import functools
+
+import typing
+
+
 import json
-from collections.abc import Callable
+import wrapt
 from dataclasses import dataclass, asdict
-from functools import wraps, partial
-from typing import List, Dict, Optional, Any
+from functools import wraps
+from typing import List, Dict, Any, Callable
 
 from .exercise import Exercise, FieldType
 from .output_json import OutputJSON, HiveFieldContentDict, ResponseType
@@ -25,18 +30,20 @@ class AutocheckResponse:
 __test_responses: Dict[str, AutocheckResponse] = {}
 
 
-def __get_contents_array(exercise: Exercise, segel_only: bool) -> List[HiveFieldContentDict]:
+def __get_contents_array(
+    exercise: Exercise, segel_only: bool
+) -> List[HiveFieldContentDict]:
     contents_by_field: Dict[int, List[str]] = {}
     for test, response in __test_responses.items():
         if response.segel_only != segel_only:
             continue
 
         for desc in response.content_descriptors:
-            field_names = []
             if desc.field_name is None:
                 field_names = [
                     field.name
-                    for field in exercise.fields if field.has_value and field.type == FieldType.Text
+                    for field in exercise.fields
+                    if field.has_value and field.type == FieldType.Text
                 ]
             else:
                 field_names = [desc.field_name]
@@ -46,31 +53,33 @@ def __get_contents_array(exercise: Exercise, segel_only: bool) -> List[HiveField
                 if field_id not in contents_by_field:
                     contents_by_field[field_id] = []
 
-                contents_by_field[field_id].append(f'### {test}:\n{desc.content}')
+                contents_by_field[field_id].append(f"### {test}:\n{desc.content}")
 
     return [
-        {
-            "field": field_id,
-            "content": '\n\n'.join(field_contents)
-        } for field_id, field_contents in contents_by_field.items()
+        {"field": field_id, "content": "\n\n".join(field_contents)}
+        for field_id, field_contents in contents_by_field.items()
     ]
 
 
 def __get_response_json(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
-    test_responses = [resp for resp in __test_responses.values() if resp.segel_only == segel_only]
+    test_responses = [
+        resp for resp in __test_responses.values() if resp.segel_only == segel_only
+    ]
 
-    current_response_types = \
-        (resp.response_type for resp in test_responses)
-    current_checker_name = \
-        (resp.hide_checker_name for resp in test_responses)
+    current_response_types = (resp.response_type for resp in test_responses)
+    current_checker_name = (resp.hide_checker_name for resp in test_responses)
 
     response_type: ResponseType = max(current_response_types)
     hide_checker_name: bool = any(current_checker_name)
 
-    return asdict(OutputJSON(contents=__get_contents_array(exercise, segel_only),
-                             type=response_type,
-                             segel_only=segel_only,
-                             hide_checker_name=hide_checker_name))
+    return asdict(
+        OutputJSON(
+            contents=__get_contents_array(exercise, segel_only),
+            type=response_type,
+            segel_only=segel_only,
+            hide_checker_name=hide_checker_name,
+        )
+    )
 
 
 def write_output(exercise: Exercise) -> None:
@@ -83,41 +92,44 @@ def write_output(exercise: Exercise) -> None:
     if has_hanich_view:
         data.append(__get_response_json(exercise, segel_only=False))
 
-    with open('/mnt/autocheck/output.json', 'w', encoding='utf-8') as output_file:
+    with open("/mnt/autocheck/output.json", "w", encoding="utf-8") as output_file:
         json.dump(data, output_file)
 
 
 def __add_error_response() -> None:
-    framework_error_message = '''One or more of your autochecks failed!
-please see autocheck logs for more info...'''
+    framework_error_message = """One or more of your autochecks failed!\nPlease see autocheck logs for more info..."""
 
     contents = [ContentDescriptor(framework_error_message, None)]
 
-    __test_responses['Hive-Tester-Framework'] = AutocheckResponse(contents,
-                                                                  ResponseType.Redo,
-                                                                  segel_only=True)
+    __test_responses["Hive-Tester-Framework"] = AutocheckResponse(
+        contents, ResponseType.Redo, segel_only=True
+    )
 
 
 TestFunction = Callable[..., AutocheckResponse | None]
 
 
-def autocheck_inner(func: TestFunction, *, test_title: str | None = None) -> Callable[..., None]:
-    test_title = test_title or func.__name__
+def autocheck[**P, R](
+    wrapped: Callable[P, R] | None = None, *, test_title: str | None = None
+) -> Callable[P, R]:
+    # https://wrapt.readthedocs.io/en/master/decorators.html#decorators-with-optional-arguments
+    if wrapped is None:
+        return functools.partial(autocheck, test_title=test_title)
 
-    @wraps(func)
-    def wrapper(*args: tuple[Any, ...], **kwargs: dict[str, Any]) -> None:
+    @functools.wraps(wrapped)
+    def wrapper(
+        wrapped: Callable[P, R], _: object | None, args: P.args, kwargs: P.kwargs
+    ) -> R:
         try:
-            response: AutocheckResponse | None = func(*args, **kwargs)
+            response = wrapped(*args, **kwargs)
             if response is not None:
-                __test_responses[test_title] = response
-        except:
+                __test_responses[test_title or wrapped.__name__] = response
+            return response
+        except Exception:
             __add_error_response()
+            return None
 
-    return wrapper
-
-
-def autocheck(test_title: str | None = None) -> Callable[[TestFunction], Callable[..., None]]:
-    return partial(autocheck_inner, test_title=test_title)
+    return wrapper(wrapped)
 
 
 def bool_to_response(boolean: bool) -> AutocheckResponse:
@@ -125,13 +137,15 @@ def bool_to_response(boolean: bool) -> AutocheckResponse:
     Basic transformation of boolean result to AutocheckResponse without specific content
     Not fit for hanich's eyes
     """
-    return AutocheckResponse([ContentDescriptor("Success!" if boolean else "Fail!", "Comment")],
-                             ResponseType.AutoCheck if boolean else ResponseType.Redo)
+    return AutocheckResponse(
+        [ContentDescriptor("Success!" if boolean else "Fail!", "Comment")],
+        ResponseType.AutoCheck if boolean else ResponseType.Redo,
+    )
 
 
 def boolean_test(func: Callable[..., bool]) -> Callable[..., AutocheckResponse]:
     """
-    Decorator to convert a boolean function to a test the can be fed to @autocheck
+    Decorator to convert a boolean function to a test that can be fed to @autocheck
     Uses bool_to_response, so also not fit for hanich's eyes
     """
 
