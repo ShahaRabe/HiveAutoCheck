@@ -1,23 +1,17 @@
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, asdict
-from enum import IntEnum
 from functools import wraps, partial
-from typing import List, Dict, Union, Optional, Any
+from typing import List, Dict, Optional, Any
 
 from .exercise import Exercise, FieldType
-from .output_json import OutputJSON
-
-
-class ResponseType(IntEnum):
-    AutoCheck = 1
-    Done = 2
-    Redo = 3
+from .output_json import OutputJSON, HiveFieldContentDict, ResponseType
 
 
 @dataclass
 class ContentDescriptor:
     content: str
-    field_name: str
+    field_name: str | None
 
 
 @dataclass
@@ -29,7 +23,6 @@ class AutocheckResponse:
 
 
 __test_responses: Dict[str, AutocheckResponse] = {}
-HiveFieldContentDict = Dict[str, Union[int, str]]
 
 
 def __get_contents_array(exercise: Exercise, segel_only: bool) -> List[HiveFieldContentDict]:
@@ -67,15 +60,15 @@ def __get_response_json(exercise: Exercise, segel_only: bool) -> Dict[str, Any]:
     test_responses = [resp for resp in __test_responses.values() if resp.segel_only == segel_only]
 
     current_response_types = \
-        (resp.response_type.value for resp in test_responses)
-    current_checker_name =\
+        (resp.response_type for resp in test_responses)
+    current_checker_name = \
         (resp.hide_checker_name for resp in test_responses)
 
-    response_type: ResponseType = ResponseType(max(current_response_types))
+    response_type: ResponseType = max(current_response_types)
     hide_checker_name: bool = any(current_checker_name)
 
     return asdict(OutputJSON(contents=__get_contents_array(exercise, segel_only),
-                             type=response_type.name,
+                             type=response_type,
                              segel_only=segel_only,
                              hide_checker_name=hide_checker_name))
 
@@ -94,7 +87,7 @@ def write_output(exercise: Exercise) -> None:
         json.dump(data, output_file)
 
 
-def __add_error_response():
+def __add_error_response() -> None:
     framework_error_message = '''One or more of your autochecks failed!
 please see autocheck logs for more info...'''
 
@@ -105,22 +98,26 @@ please see autocheck logs for more info...'''
                                                                   segel_only=True)
 
 
-def autocheck(func = None, *, test_title = None):
-    if func is None:
-        return partial(autocheck, test_title=test_title)
+TestFunction = Callable[..., AutocheckResponse | None]
 
+
+def autocheck_inner(func: TestFunction, *, test_title: str | None = None) -> Callable[..., None]:
     test_title = test_title or func.__name__
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: tuple[Any, ...], **kwargs: dict[str, Any]) -> None:
         try:
-            response: Optional[AutocheckResponse] = func(*args, **kwargs)
+            response: AutocheckResponse | None = func(*args, **kwargs)
             if response is not None:
                 __test_responses[test_title] = response
         except:
             __add_error_response()
 
     return wrapper
+
+
+def autocheck(test_title: str | None = None) -> Callable[[TestFunction], Callable[..., None]]:
+    return partial(autocheck_inner, test_title=test_title)
 
 
 def bool_to_response(boolean: bool) -> AutocheckResponse:
@@ -132,14 +129,15 @@ def bool_to_response(boolean: bool) -> AutocheckResponse:
                              ResponseType.AutoCheck if boolean else ResponseType.Redo)
 
 
-def boolean_test(func=None):
+def boolean_test(func: Callable[..., bool]) -> Callable[..., AutocheckResponse]:
     """
     Decorator to convert a boolean function to a test the can be fed to @autocheck
-    Uses bool_to_response, so also not fir for hanich's eyes
+    Uses bool_to_response, so also not fit for hanich's eyes
     """
+
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: tuple[Any, ...], **kwargs: Dict[str, Any]) -> AutocheckResponse:
         response: bool = func(*args, **kwargs)
         return bool_to_response(response)
-    
+
     return wrapper

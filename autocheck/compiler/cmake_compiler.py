@@ -1,7 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 from .make_compiler import MakeCompiler
 from .exceptions import CompilationException
@@ -18,7 +18,7 @@ class CMakeCompiler(MakeCompiler):
     CMAKE_BUILD_DIR = "build"
 
     @staticmethod
-    def compile(solution_directory_path: Path, exercise_name: Optional[str] = None):
+    def compile(solution_directory_path: Path, exercise_name: Optional[str] = None) -> Tuple[int, bytes, bytes]:
         build_dir = solution_directory_path / CMakeCompiler.CMAKE_BUILD_DIR
         build_dir.mkdir(parents=True, exist_ok=True)
 
@@ -35,15 +35,15 @@ class CMakeCompiler(MakeCompiler):
             raise CompilationException(
                 f"Running cmake failed with return code {proc.returncode}.\n\n"
                 f"Compilation stdout:\n"
-                f"{out}\n\n"
-                f"Compilation stderr:\n{err}"
+                f"{out.decode()}\n\n"
+                f"Compilation stderr:\n{err.decode()}"
             )
 
         return MakeCompiler.compile(build_dir, exercise_name)
 
     @staticmethod
     def find_executable_path(solution_directory_path: Path, exercise_name: str) -> Path:
-        exercise_name: str = "".join(exercise_name.lower().split())
+        exercise_name = "".join(exercise_name.lower().split())
         build_dir: Path = solution_directory_path / CMakeCompiler.CMAKE_BUILD_DIR
         make_compiler_build_dir = solution_directory_path / MakeCompiler._OUTPUT_DIR_NAME
 
@@ -53,4 +53,4 @@ class CMakeCompiler(MakeCompiler):
         if build_dir != make_compiler_build_dir:
             os.link(build_dir, make_compiler_build_dir)
 
-        MakeCompiler.find_executable_path(solution_directory_path, exercise_name)
+        return MakeCompiler.find_executable_path(solution_directory_path, exercise_name)

@@ -2,11 +2,12 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 from .compiler import Compiler
 from .exceptions import CompilationException
 from ..path_utils import push_dir
+
 
 class MakeCompiler(Compiler):
     """
@@ -18,7 +19,7 @@ class MakeCompiler(Compiler):
     _OUTPUT_DIR_NAME = 'bin'
 
     @staticmethod
-    def compile(solution_directory_path: Path, exercise_name: Optional[str] = None):
+    def compile(solution_directory_path: Path, exercise_name: Optional[str] = None) -> Tuple[int, bytes, bytes]:
         logging.info("compile with MakeCompiler")
 
         MakeCompiler.validate_makefile_exists(solution_directory_path)
@@ -37,15 +38,15 @@ class MakeCompiler(Compiler):
             raise CompilationException(
                 f"Running make failed with return code {proc.returncode}.\n\n"
                 f"Compilation stdout:\n"
-                f"{out}\n\n"
-                f"Compilation stderr:\n{err}"
+                f"{out.decode()}\n\n"
+                f"Compilation stderr:\n{err.decode()}"
             )
 
         return proc.returncode, out, err
 
     @staticmethod
     def find_executable_path(solution_directory_path: Path, exercise_name: str) -> Path:
-        exercise_name: str = "".join(exercise_name.lower().split())
+        exercise_name = "".join(exercise_name.lower().split())
         bin_dir_path: Path = solution_directory_path / MakeCompiler._OUTPUT_DIR_NAME
 
         if not bin_dir_path.exists():
@@ -59,9 +60,10 @@ class MakeCompiler(Compiler):
             if file_name.lower() == exercise_name:
                 return bin_dir_path / file_name
 
-        raise CompilationException("The executables directory should contain a file named like the exercise in one word, or exactly 1 file")
+        raise CompilationException(
+            "The executables directory should contain a file named like the exercise in one word, or exactly 1 file")
 
     @staticmethod
-    def validate_makefile_exists(solution_directory_path: Path):
+    def validate_makefile_exists(solution_directory_path: Path) -> None:
         if not any((solution_directory_path / makefile).exists() for makefile in MakeCompiler._MAKEFILE_POSSIBLE_NAMES):
             raise CompilationException("No makefile found.")

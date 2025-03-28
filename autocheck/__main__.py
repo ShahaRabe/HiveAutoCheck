@@ -13,16 +13,20 @@ from .gitlab_client.gitlab_client import GitlabClient
 
 
 def logging_level() -> int:
-    return getattr(logging, os.getenv('LOGGING_LEVEL') or 'WARNING')
+    return int(getattr(logging, os.getenv('LOGGING_LEVEL') or 'WARNING'))
 
 
 def clone_tests_config() -> None:
     segel_gitlab_host = os.getenv('SEGEL_GITLAB_HOST')
     segel_gitlab_token = os.getenv('SEGEL_GITLAB_TOKEN')
-    segel_gitlab_client = GitlabClient(segel_gitlab_host, segel_gitlab_token)
 
     tests_repo_url = os.getenv('TESTS_REPOSITORY_URL')
     tests_repo_ref = os.getenv('TESTS_REPOSITORY_REF')
+
+    if segel_gitlab_host is None or segel_gitlab_token is None or tests_repo_ref is None or tests_repo_url is None:
+        raise Exception("Please configure git settings for tests repo")
+
+    segel_gitlab_client = GitlabClient(segel_gitlab_host, segel_gitlab_token)
     segel_gitlab_client.clone(tests_repo_url, TESTS_FILES_DIRECTORY, tests_repo_ref)
 
 
@@ -34,7 +38,7 @@ def get_tests_to_run(exercise: Exercise) -> List[str]:
         return [str(TESTS_FILES_DIRECTORY / test) for test in json.load(f)[exercise.name]]
 
 
-def main():
+def main() -> None:
     logging.basicConfig(level=logging_level())
 
     clone_tests_config()
@@ -42,7 +46,7 @@ def main():
     input_json_file: InputJSON = get_input_file()
     exercise_data: Exercise = get_exercise_from_input(input_json_file)
     tests: List[str] = get_tests_to_run(exercise_data)
-    pytest.main(["--rootdir", TESTS_FILES_DIRECTORY, "-o", "log_cli=1"] + tests)
+    pytest.main(["--rootdir", str(TESTS_FILES_DIRECTORY), "-o", "log_cli=1"] + tests)
 
 
 if __name__ == '__main__':

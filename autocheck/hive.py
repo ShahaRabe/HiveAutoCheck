@@ -12,7 +12,7 @@ urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class HiveAPI:
-    def __init__(self):
+    def __init__(self) -> None:
         username = os.environ.get('HIVE_API_USER')
         password = os.environ.get('HIVE_API_PASS')
         hive_host = os.environ.get('HIVE_HOST')
@@ -44,17 +44,17 @@ class HiveAPI:
         if response.status_code != 200:
             raise RuntimeError("Failed to get token!")
 
-        return response.json()["access"]
+        return str(response.json()["access"])
 
     def get_exercise_id_by_assignment_id(self, assignemnt_id: int) -> int:
         response = self._get_api_response(f"/api/core/assignments/{assignemnt_id}")
 
         try:
-            return response.json()["exercise"]
+            return int(response.json()["exercise"])
         except IndexError as ex:
             raise RuntimeError(f"assignment {assignemnt_id} does not exist") from ex
 
-    def retrieve_exercise_fields_by_id(self, exercise_id) -> List[Field]:
+    def retrieve_exercise_fields_by_id(self, exercise_id: int) -> List[Field]:
         response = self._get_api_response(f"/api/core/course/exercises/{exercise_id}/fields/")
         fields = response.json()
         return [
