@@ -116,7 +116,7 @@ def autocheck[**P, R](
     if wrapped is None:
         return functools.partial(autocheck, test_title=test_title)
 
-    @functools.wraps(wrapped)
+    @wrapt.decorator
     def wrapper(
         wrapped: Callable[P, R], _: object | None, args: P.args, kwargs: P.kwargs
     ) -> R:
