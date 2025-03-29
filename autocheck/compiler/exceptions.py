@@ -31,6 +31,7 @@ class CompileError(Exception):
     Represents a 'safe' compilation error.
     This error can be displayed to the user.
     """
+
     stdout: str
 
     def __init__(self, stdout: str):

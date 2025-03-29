@@ -13,6 +13,9 @@ dependencies = [
     "pytest",
     "patool",
     "python-gitlab==2.10.0",
+    "pydantic>=2.11.0",
+    "pydantic-settings>=2.8.1",
+    "wrapt>=1.17.0",
 ]
 readme = "README.md"
 description = "A framework to easily create autocheck tests for Hive exercises"
@@ -20,10 +23,20 @@ classifiers = [
     "Private :: Do Not Upload",
 ]
 
+[project.entry-points.pytest11]
+hive_autocheck = "autocheck.fixtures"
+
 [dependency-groups]
-dev = ["mypy>=1.11.2,<2", "types_requests"]
+dev = [
+    "mypy>=1.11.2,<2",
+    "ruff>=0.11.2",
+    "types-decorator>=5.2.0.20250324",
+    "types-requests",
+]
 
 [tool.mypy]
+plugins = ['pydantic.mypy']
+
 # Ensure full coverage
 disallow_untyped_calls = 1
 disallow_untyped_defs = 1

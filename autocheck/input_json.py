@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any, Literal, Optional
+from typing import Any, Literal
 
 
 @dataclass
@@ -15,12 +15,12 @@ class InputJSON:
     in the Hive sources.
     """
 
-    file: Optional[str]
+    file: str | None
     file_name: str
-    contents: List[Dict[str, Any]]
-    form_fields: List[Dict[str, Any]]
+    contents: list[dict[str, Any]]
+    form_fields: list[dict[str, Any]]
     assignment_id: int
-    description: Optional[str]
+    description: str | None
 
     """
     The type hints are derived
@@ -30,7 +30,7 @@ class InputJSON:
     """
     user_gender: Literal["Male", "Female", "NonBinary"]
 
-    def get_field_content(self, field_name: str) -> Optional[str]:
+    def get_field_content(self, field_name: str) -> str | None:
         entries = list(
             filter(lambda entry: entry["name"] == field_name, self.form_fields)
         )
