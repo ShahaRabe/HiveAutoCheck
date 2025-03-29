@@ -1,7 +1,7 @@
 import contextlib
 import os
-from pathlib import Path
 from collections.abc import Generator
+from pathlib import Path
 
 
 @contextlib.contextmanager

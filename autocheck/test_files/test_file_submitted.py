@@ -1,8 +1,8 @@
 from autocheck.autocheck import (
-    autocheck,
     AutocheckResponse,
-    ResponseType,
     ContentDescriptor,
+    ResponseType,
+    autocheck,
 )
 
 

@@ -2,9 +2,9 @@ import os
 import subprocess
 from pathlib import Path
 
-from .make_compiler import MakeCompiler
-from .exceptions import CompilationException
 from ..path_utils import push_dir
+from .exceptions import CompilationException
+from .make_compiler import MakeCompiler
 
 
 class CMakeCompiler(MakeCompiler):

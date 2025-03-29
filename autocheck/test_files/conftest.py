@@ -1,13 +1,13 @@
 import base64
-
+from collections.abc import Generator
 from pathlib import Path
-import pytest
+
 import patoolib
+import pytest
+
+from autocheck.autocheck import write_output
 from autocheck.exercise import Exercise
 from autocheck.input_json import InputJSON
-from autocheck.autocheck import write_output
-
-from collections.abc import Generator
 
 
 @pytest.fixture(scope="session")

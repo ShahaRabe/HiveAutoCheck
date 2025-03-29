@@ -1,9 +1,8 @@
 import logging
+import urllib.parse
 from pathlib import Path
 
 import gitlab
-import urllib.parse
-
 
 _URL_PATH_SEPARATOR = "/"
 

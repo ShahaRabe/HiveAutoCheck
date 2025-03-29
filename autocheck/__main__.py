@@ -1,14 +1,14 @@
-from pathlib import Path
 import json
 import logging
+from pathlib import Path
 
 import pytest
 
-from .settings import settings
-from .fixtures import TESTS_FILES_DIRECTORY, get_input_file, get_exercise_from_input
 from .exercise import Exercise
-from .input_json import InputJSON
+from .fixtures import TESTS_FILES_DIRECTORY, get_exercise_from_input, get_input_file
 from .gitlab_client.gitlab_client import GitlabClient
+from .input_json import InputJSON
+from .settings import settings
 
 
 def clone_tests_repository(

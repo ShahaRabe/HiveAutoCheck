@@ -1,18 +1,20 @@
 import builtins
-import logging
-
 import json
-import wrapt
-from dataclasses import dataclass, asdict
+import logging
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from functools import wraps
 from typing import Any
-from collections.abc import Callable
+
+import wrapt
 from deprecated import deprecated
+
 from .exercise import Exercise, FieldType
-from .output_json import OutputJSON, HiveFieldContentDict, ResponseType
+from .output_json import HiveFieldContentDict, OutputJSON, ResponseType
 from .settings import settings
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ContentDescriptor:
@@ -110,9 +112,7 @@ def __add_error_response() -> None:
 _AutocheckCallable = Callable[..., AutocheckResponse | bool | None]
 
 
-def autocheck(
-    *, test_title: str | None = None
-) -> _AutocheckCallable:
+def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
     # https://wrapt.readthedocs.io/en/master/decorators.html#decorators-with-arguments
     @wrapt.decorator
     def wrapper(
@@ -132,7 +132,9 @@ def autocheck(
                         logger.debug("An AutocheckResponse was returned")
                         pass
                     case _:
-                        raise ValueError("An autocheck must return an AutocheckResponse or a boolean")
+                        raise ValueError(
+                            "An autocheck must return an AutocheckResponse or a boolean"
+                        )
 
                 __test_responses[test_title or wrapped.__name__] = response
             return response
@@ -154,6 +156,7 @@ def bool_to_response(boolean: bool) -> AutocheckResponse:
         [ContentDescriptor("Success!" if boolean else "Fail!", "Comment")],
         ResponseType.AutoCheck if boolean else ResponseType.Redo,
     )
+
 
 @deprecated(version="0.2.0", reason="Use `@autocheck()` instead")
 def boolean_test(func: Callable[..., bool]) -> Callable[..., AutocheckResponse]:

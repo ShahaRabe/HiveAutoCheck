@@ -1,22 +1,22 @@
 import json
 import os.path
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
-from collections.abc import Generator
 
 import patoolib
 import pytest
 
 from .BlackboxTests.blackbox_test_config import BlackboxTestConfig
+from .compiler.cmake_compiler import CMakeCompiler
+from .compiler.compiler import Compiler
+from .compiler.exceptions import CompilationException
+from .compiler.make_compiler import MakeCompiler
 from .exercise import Exercise
 from .gitlab_client.gitlab_client import GitlabClient
 from .hive import HiveAPI
 from .input_json import InputJSON
-from .compiler.compiler import Compiler
-from .compiler.exceptions import CompilationException
-from .compiler.make_compiler import MakeCompiler
-from .compiler.cmake_compiler import CMakeCompiler
 from .settings import settings
 
 __ORIGINAL_FILE_DIRECTORY: Path = Path("/tmp/exercise_files/original")

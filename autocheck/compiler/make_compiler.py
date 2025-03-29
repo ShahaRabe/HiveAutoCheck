@@ -3,9 +3,9 @@ import os
 import subprocess
 from pathlib import Path
 
+from ..path_utils import push_dir
 from .compiler import Compiler
 from .exceptions import CompilationException
-from ..path_utils import push_dir
 
 
 class MakeCompiler(Compiler):
