@@ -1,4 +1,3 @@
-
 from autocheck.autocheck import (
     autocheck,
     AutocheckResponse,

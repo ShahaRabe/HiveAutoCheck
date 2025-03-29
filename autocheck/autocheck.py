@@ -1,14 +1,18 @@
+import builtins
+import logging
+
 import json
 import wrapt
 from dataclasses import dataclass, asdict
 from functools import wraps
 from typing import Any
 from collections.abc import Callable
-
+from deprecated import deprecated
 from .exercise import Exercise, FieldType
 from .output_json import OutputJSON, HiveFieldContentDict, ResponseType
 from .settings import settings
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class ContentDescriptor:
@@ -103,13 +107,16 @@ def __add_error_response() -> None:
     )
 
 
+_AutocheckCallable = Callable[..., AutocheckResponse | bool | None]
+
+
 def autocheck(
     *, test_title: str | None = None
-) -> Callable[..., AutocheckResponse | None]:
+) -> _AutocheckCallable:
     # https://wrapt.readthedocs.io/en/master/decorators.html#decorators-with-arguments
     @wrapt.decorator
     def wrapper(
-        wrapped: Callable[..., AutocheckResponse | None],
+        wrapped: _AutocheckCallable,
         _: object | None,
         args: tuple[str, ...],
         kwargs: dict[str, Any],
@@ -117,9 +124,21 @@ def autocheck(
         try:
             response = wrapped(*args, **kwargs)
             if response is not None:
+                match type(response):
+                    case builtins.bool:
+                        logger.debug("A boolean was returned")
+                        response = bool_to_response(response)
+                    case AutocheckResponse():
+                        logger.debug("An AutocheckResponse was returned")
+                        pass
+                    case _:
+                        raise ValueError("An autocheck must return an AutocheckResponse or a boolean")
+
                 __test_responses[test_title or wrapped.__name__] = response
             return response
+
         except Exception:
+            logger.exception("An autocheck has raised an exception")
             __add_error_response()
             return None
 
@@ -136,7 +155,7 @@ def bool_to_response(boolean: bool) -> AutocheckResponse:
         ResponseType.AutoCheck if boolean else ResponseType.Redo,
     )
 
-
+@deprecated(version="0.2.0", reason="Use `@autocheck()` instead")
 def boolean_test(func: Callable[..., bool]) -> Callable[..., AutocheckResponse]:
     """
     Decorator to convert a boolean function to a test that can be fed to @autocheck

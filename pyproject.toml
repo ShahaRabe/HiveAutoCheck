@@ -3,8 +3,8 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-dynamic = ["version"]
-requires-python = ">= 3.9"
+requires-python = ">= 3.12"
+version = "0.2.0"
 name = "hive_autocheck"
 dependencies = [
     "argparse",
@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2.11.0",
     "pydantic-settings>=2.8.1",
     "wrapt>=1.17.0",
+    "deprecated>=1.2.18",
 ]
 readme = "README.md"
 description = "A framework to easily create autocheck tests for Hive exercises"
@@ -63,5 +64,3 @@ no_implicit_optional = 1
 ignore_missing_imports = 0
 disallow_any_unimported = 1
 
-[tool.setuptools.dynamic]
-version = { attr = "autocheck.__version__" }

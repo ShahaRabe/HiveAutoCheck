@@ -76,7 +76,7 @@ class GitlabClient:
                 out_file_path.mkdir(parents=True)
 
             if file_type != "tree":
-                with open(out_file_path.as_posix(), "wb") as f:
+                with out_file_path.open("wb") as f:
                     project.files.raw(
                         file_path, ref=branch_name, streamed=True, action=f.write
                     )
