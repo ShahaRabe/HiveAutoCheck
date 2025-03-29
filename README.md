@@ -71,7 +71,7 @@ If any test throws you'd be noticed by a `segel_only` response by the infrastruc
 
 ### autocheck.Dockerfile
 
-> Note there is no entrypoint - __DO NOT__ override the entrypoint):
+> Note there is no entrypoint - __DO NOT__ override the entrypoint:
 
 ```Dockerfile
 FROM autocheck:latest
@@ -124,12 +124,12 @@ def test_files(submitted_file: Optional[bytes], original_file_path: Optional[Pat
     return AutocheckResponse([ ContentDescriptor('\n'.join(string), "Comment") ], ResponseType.AutoCheck if string[0] != 'What just happened?' else ResponseType.Redo)
 ```
 
-# And Where Do I Put My Tests?
+## And Where Do I Put My Tests?
 
 Place your tests in a file (or files) under the `tests` directory. Then under the `metadata` folder create subfolders according to the path of the exercise in Hive (`<subject>/<module>`) and create a `json` file called `tests_list.json` which will contain an array of files or tests for each exercise.
 
 
-## Example `tests_list.json`
+### Example `tests_list.json`
 
 ```json
 {
