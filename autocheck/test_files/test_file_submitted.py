@@ -1,4 +1,3 @@
-from typing import Optional
 
 from autocheck.autocheck import (
     autocheck,
@@ -9,7 +8,7 @@ from autocheck.autocheck import (
 
 
 @autocheck(test_title="File Submission")
-def test_file_submitted(submitted_file: Optional[bytes]) -> AutocheckResponse:
+def test_file_submitted(submitted_file: bytes | None) -> AutocheckResponse:
     """
     Tests that the hanich submitted a file.
     Use if you need a hanich submission for all tests

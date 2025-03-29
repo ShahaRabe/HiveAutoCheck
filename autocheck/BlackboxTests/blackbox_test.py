@@ -6,7 +6,7 @@ import sys
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Dict, Generator
+from collections.abc import Generator
 
 from .blackbox_test_config import BlackboxTestConfig
 
@@ -14,14 +14,14 @@ from .blackbox_test_config import BlackboxTestConfig
 @dataclass
 class TestResult:
     is_success: bool
-    output: Optional[str] = None
+    output: str | None = None
 
 
 @contextlib.contextmanager
 def additional_files_context(
-    additional_files: Dict[Path, Path] | None, working_directory: Path
+    additional_files: dict[Path, Path] | None, working_directory: Path
 ) -> Generator[None, None, None]:
-    files: Dict[Path, Path] = additional_files or {}
+    files: dict[Path, Path] = additional_files or {}
     for src_file, dst_file in files.items():
         shutil.copy2(src_file, working_directory / dst_file)
     yield
@@ -65,8 +65,8 @@ class BlackboxTest:
         self,
         program: str,
         timeout_in_seconds: int,
-        program_cmdline_args: Optional[List[str]] = None,
-        stdin_string: Optional[str] = None,
+        program_cmdline_args: list[str] | None = None,
+        stdin_string: str | None = None,
     ) -> None:
         self.process = None
         self.stdout = None
@@ -105,7 +105,7 @@ class BlackboxTest:
     def run_test(
         self,
         program: str,
-        test_configs: List[BlackboxTestConfig],
+        test_configs: list[BlackboxTestConfig],
         working_directory: Path,
         timeout_in_seconds: int = __DEFAULT_EXECUTABLE_TIMEOUT,
     ) -> TestResult:

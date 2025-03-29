@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import List, Dict, Any
+from typing import Any
 
-HiveFieldContentDict = Dict[str, int | str]
+HiveFieldContentDict = dict[str, int | str]
 
 
 class ResponseType(StrEnum):
@@ -24,4 +24,4 @@ class OutputJSON:
     type: ResponseType
     segel_only: bool = True
     hide_checker_name: bool = True
-    contents: List[HiveFieldContentDict] = field(default_factory=list)
+    contents: list[HiveFieldContentDict] = field(default_factory=list)

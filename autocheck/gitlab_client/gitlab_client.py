@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Tuple
 
 import gitlab
 import urllib.parse
@@ -54,7 +53,7 @@ class GitlabClient:
         return project
 
     @staticmethod
-    def __parse_url(url: str) -> Tuple[str, str]:
+    def __parse_url(url: str) -> tuple[str, str]:
         url_path_quoted_parts = urllib.parse.urlparse(url).path.split(
             _URL_PATH_SEPARATOR
         )

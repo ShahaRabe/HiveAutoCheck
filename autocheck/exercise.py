@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 from enum import Enum
 
 
@@ -27,10 +26,10 @@ class Exercise:
     module_name: str
     subject_letter: str
     subject_name: str
-    fields: List[Field]
+    fields: list[Field]
 
     def get_field_id(self, field_name: str) -> int:
-        fields_with_name: List[Field] = list(
+        fields_with_name: list[Field] = list(
             filter(lambda field: field.name == field_name, self.fields)
         )
 

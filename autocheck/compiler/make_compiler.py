@@ -2,7 +2,6 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
 
 from .compiler import Compiler
 from .exceptions import CompilationException
@@ -21,8 +20,8 @@ class MakeCompiler(Compiler):
 
     @staticmethod
     def compile(
-        solution_directory_path: Path, exercise_name: Optional[str] = None
-    ) -> Tuple[int, bytes, bytes]:
+        solution_directory_path: Path, exercise_name: str | None = None
+    ) -> tuple[int, bytes, bytes]:
         logging.info("compile with MakeCompiler")
 
         MakeCompiler.validate_makefile_exists(solution_directory_path)

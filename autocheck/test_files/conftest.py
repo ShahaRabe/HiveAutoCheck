@@ -7,7 +7,7 @@ from autocheck.exercise import Exercise
 from autocheck.input_json import InputJSON
 from autocheck.autocheck import write_output
 
-from typing import Generator
+from collections.abc import Generator
 
 
 @pytest.fixture(scope="session")

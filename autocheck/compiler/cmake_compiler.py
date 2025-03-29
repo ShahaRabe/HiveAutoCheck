@@ -1,7 +1,6 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
 
 from .make_compiler import MakeCompiler
 from .exceptions import CompilationException
@@ -20,8 +19,8 @@ class CMakeCompiler(MakeCompiler):
 
     @staticmethod
     def compile(
-        solution_directory_path: Path, exercise_name: Optional[str] = None
-    ) -> Tuple[int, bytes, bytes]:
+        solution_directory_path: Path, exercise_name: str | None = None
+    ) -> tuple[int, bytes, bytes]:
         build_dir = solution_directory_path / CMakeCompiler.CMAKE_BUILD_DIR
         build_dir.mkdir(parents=True, exist_ok=True)
 

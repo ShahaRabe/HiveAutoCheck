@@ -1,4 +1,3 @@
-from typing import List
 from pathlib import Path
 import json
 import logging
@@ -19,13 +18,13 @@ def clone_tests_repository(
     segel_gitlab_client.clone(repository_url, TESTS_FILES_DIRECTORY, repository_ref)
 
 
-def get_tests_to_run(exercise: Exercise) -> List[str]:
+def get_tests_to_run(exercise: Exercise) -> list[str]:
     exercise_relative_path: Path = Path(exercise.subject_name) / exercise.module_name
     metadata_file_path: Path = (
         TESTS_FILES_DIRECTORY / "metadata" / exercise_relative_path / "tests_list.json"
     )
 
-    with open(metadata_file_path, "r") as f:
+    with open(metadata_file_path) as f:
         return [
             str(TESTS_FILES_DIRECTORY / test) for test in json.load(f)[exercise.name]
         ]
@@ -43,7 +42,7 @@ def main() -> None:
 
     input_json_file: InputJSON = get_input_file()
     exercise_data: Exercise = get_exercise_from_input(input_json_file)
-    tests: List[str] = get_tests_to_run(exercise_data)
+    tests: list[str] = get_tests_to_run(exercise_data)
     pytest.main(["--rootdir", str(TESTS_FILES_DIRECTORY), "-o", "log_cli=1"] + tests)
 
 

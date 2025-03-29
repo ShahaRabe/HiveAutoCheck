@@ -3,7 +3,6 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Dict
 
 
 # TODO: make blackbox tests more ergonomic
@@ -11,16 +10,16 @@ from typing import Optional, List, Dict
 class BlackboxTestConfig:
     description: str
     input: str
-    expected_output: List[str]
-    cmdline_args: Optional[List[str]] = None
-    custom_error_message: Optional[str] = None
-    additional_files_mapping: Optional[Dict[Path, Path]] = None
+    expected_output: list[str]
+    cmdline_args: list[str] | None = None
+    custom_error_message: str | None = None
+    additional_files_mapping: dict[Path, Path] | None = None
 
     @staticmethod
     def load_exercise_mapping_from_python_dir(
         test_configs_dir: str,
-    ) -> Dict[str, List["BlackboxTestConfig"]]:
-        mappings: Dict[str, List[BlackboxTestConfig]] = {}
+    ) -> dict[str, list["BlackboxTestConfig"]]:
+        mappings: dict[str, list[BlackboxTestConfig]] = {}
 
         PYTHON_EXTENSION: str = ".py"
         for root, dirs, files in os.walk(test_configs_dir):
@@ -43,7 +42,7 @@ class BlackboxTestConfig:
         return mappings
 
     @staticmethod
-    def load_config_from_file(test_config_path: Path) -> List["BlackboxTestConfig"]:
+    def load_config_from_file(test_config_path: Path) -> list["BlackboxTestConfig"]:
         module_path: str = str(test_config_path.parent / test_config_path.stem).replace(
             os.path.sep, "."
         )

@@ -2,7 +2,8 @@ import json
 import os.path
 import tempfile
 from pathlib import Path
-from typing import Optional, Generator, Dict, Any, List, Type
+from typing import Any
+from collections.abc import Generator
 
 import patoolib
 import pytest
@@ -25,8 +26,8 @@ TESTS_FILES_DIRECTORY: Path = (
 
 
 def get_input_file() -> InputJSON:
-    with open(settings.hive_input_json_path, "r", encoding="utf-8") as input_file:
-        content: Dict[str, Any] = json.load(input_file)
+    with open(settings.hive_input_json_path, encoding="utf-8") as input_file:
+        content: dict[str, Any] = json.load(input_file)
         return InputJSON(**content)
 
 
@@ -49,7 +50,7 @@ def exercise(input_json: InputJSON) -> Exercise:
 
 
 @pytest.fixture(scope="session")
-def original_file_path(input_json: InputJSON) -> Optional[Path]:
+def original_file_path(input_json: InputJSON) -> Path | None:
     file_name = input_json.file_name
     if not file_name:
         return None
@@ -84,7 +85,7 @@ def cloned_repository(
 
 
 def compile_and_get_executable_path(
-    cloned_repository: Path, exercise: Exercise, compiler_type: Type[Compiler]
+    cloned_repository: Path, exercise: Exercise, compiler_type: type[Compiler]
 ) -> Path:
     result, out, err = compiler_type.compile(cloned_repository, exercise.name)
 
@@ -92,8 +93,8 @@ def compile_and_get_executable_path(
         return compiler_type.find_executable_path(cloned_repository, exercise.name)
 
     if err:
-        raise CompilationException("Solution build failed:\n{}".format(err.decode()))
-    raise CompilationException("Solution build failed:\n{}".format(out.decode()))
+        raise CompilationException(f"Solution build failed:\n{err.decode()}")
+    raise CompilationException(f"Solution build failed:\n{out.decode()}")
 
 
 @pytest.fixture(scope="session")
@@ -107,7 +108,7 @@ def cmake_compiled_executable(cloned_repository: Path, exercise: Exercise) -> Pa
 
 
 @pytest.fixture(scope="session")
-def blackbox_test_configs(exercise: Exercise) -> List[BlackboxTestConfig]:
+def blackbox_test_configs(exercise: Exercise) -> list[BlackboxTestConfig]:
     module_name: str = (
         exercise.name.replace(" ", "_").replace(".", "_").replace("'", "").lower()
     )
@@ -119,7 +120,7 @@ def blackbox_test_configs(exercise: Exercise) -> List[BlackboxTestConfig]:
 
 
 @pytest.fixture(scope="session")
-def submitted_file(original_file_path: Optional[Path]) -> Optional[bytes]:
+def submitted_file(original_file_path: Path | None) -> bytes | None:
     file_path: Path = original_file_path or Path()
     if not file_path.is_file():
         return None
@@ -128,7 +129,7 @@ def submitted_file(original_file_path: Optional[Path]) -> Optional[bytes]:
 
 
 @pytest.fixture(scope="session")
-def extracted_path(original_file_path: Optional[Path]) -> Optional[Path]:
+def extracted_path(original_file_path: Path | None) -> Path | None:
     original_file = original_file_path or Path()
     if not patoolib.is_archive(original_file):
         return None

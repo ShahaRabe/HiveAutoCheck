@@ -2,7 +2,8 @@ import json
 import wrapt
 from dataclasses import dataclass, asdict
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 from .exercise import Exercise, FieldType
 from .output_json import OutputJSON, HiveFieldContentDict, ResponseType
@@ -81,8 +82,8 @@ def __get_response_json(exercise: Exercise, segel_only: bool) -> dict[str, Any]:
 def write_output(exercise: Exercise) -> None:
     data: list[dict[str, Any]] = []
 
-    has_segel_only = any((res.segel_only for res in __test_responses.values()))
-    has_hanich_view = any((not res.segel_only for res in __test_responses.values()))
+    has_segel_only = any(res.segel_only for res in __test_responses.values())
+    has_hanich_view = any(not res.segel_only for res in __test_responses.values())
     if has_segel_only:
         data.append(__get_response_json(exercise, segel_only=True))
     if has_hanich_view:

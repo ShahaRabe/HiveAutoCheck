@@ -1,4 +1,3 @@
-from typing import Dict, List
 
 import requests
 import urllib3
@@ -26,7 +25,7 @@ class HiveAPI:
         @param username: The username to log in with
         @param password: The password to log in with
         """
-        cred: Dict[str, str] = {"username": username, "password": password}
+        cred: dict[str, str] = {"username": username, "password": password}
         response = self.session.get(self.host + "/api/auth/session", verify=False)
         if response.status_code != 200:
             raise RuntimeError("Failed to login to hive!")
@@ -47,7 +46,7 @@ class HiveAPI:
         except IndexError as ex:
             raise RuntimeError(f"assignment {assignemnt_id} does not exist") from ex
 
-    def retrieve_exercise_fields_by_id(self, exercise_id: int) -> List[Field]:
+    def retrieve_exercise_fields_by_id(self, exercise_id: int) -> list[Field]:
         response = self._get_api_response(
             f"/api/core/course/exercises/{exercise_id}/fields/"
         )
