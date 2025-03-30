@@ -124,13 +124,12 @@ def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
         try:
             response = wrapped(*args, **kwargs)
             if response is not None:
-                match type(response):
-                    case builtins.bool:
+                match response:
+                    case bool():
                         logger.debug("A boolean was returned")
                         response = bool_to_response(response)
                     case AutocheckResponse():
                         logger.debug("An AutocheckResponse was returned")
-                        pass
                     case _:
                         raise ValueError(
                             "An autocheck must return an AutocheckResponse or a boolean"
