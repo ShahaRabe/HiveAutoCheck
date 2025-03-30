@@ -120,7 +120,7 @@ def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
         _: object | None,
         args: tuple[str, ...],
         kwargs: dict[str, Any],
-    ) -> AutocheckResponse | None:
+    ) -> None:
         try:
             response = wrapped(*args, **kwargs)
             if response is not None:
@@ -136,12 +136,10 @@ def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
                         )
 
                 __test_responses[test_title or wrapped.__name__] = response
-            return response
 
         except Exception:
             logger.exception("An autocheck has raised an exception")
             __add_error_response()
-            return None
 
     return wrapper
 
