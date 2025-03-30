@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     hive_api_user: str
     hive_api_pass: str
 
-    hive_input_json_path: Path = Path("/mnt/autocheck/input.json'")
-    hive_output_json_path: Path = Path("/mnt/autocheck/output.json'")
+    hive_input_json_path: Path = Path("/mnt/autocheck/input.json")
+    hive_output_json_path: Path = Path("/mnt/autocheck/output.json")
 
     logging_level: str = "WARNING"
 
