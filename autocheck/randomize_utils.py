@@ -8,7 +8,7 @@ def random_string(min_len: int = 0, max_len: int = 100) -> str:
     safe_printable = string.ascii_letters + string.digits
     for i in range(length):
         res += random.choice(safe_printable)
-    
+
     return res
 
 

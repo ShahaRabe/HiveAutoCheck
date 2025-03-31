@@ -1,24 +1,26 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
 
-from .make_compiler import MakeCompiler
-from .exceptions import CompilationException
 from ..path_utils import push_dir
+from .exceptions import CompilationException
+from .make_compiler import MakeCompiler
 
 
 class CMakeCompiler(MakeCompiler):
     """
     Compiler for exercises compiled with cmake.
     """
+
     CMAKE_COMMAND = ["/usr/bin/cmake", "../"]
     MAKE_COMMAND = ["make"]
     COMPILATION_SUCCESS_RETURN_VALUE = 0
     CMAKE_BUILD_DIR = "build"
 
     @staticmethod
-    def compile(solution_directory_path: Path, exercise_name: Optional[str] = None) -> Tuple[int, bytes, bytes]:
+    def compile(
+        solution_directory_path: Path, exercise_name: str | None = None
+    ) -> tuple[int, bytes, bytes]:
         build_dir = solution_directory_path / CMakeCompiler.CMAKE_BUILD_DIR
         build_dir.mkdir(parents=True, exist_ok=True)
 
@@ -27,7 +29,7 @@ class CMakeCompiler(MakeCompiler):
                 CMakeCompiler.CMAKE_COMMAND,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                shell=True
+                shell=True,
             )
 
         out, err = proc.communicate()
@@ -45,10 +47,14 @@ class CMakeCompiler(MakeCompiler):
     def find_executable_path(solution_directory_path: Path, exercise_name: str) -> Path:
         exercise_name = "".join(exercise_name.lower().split())
         build_dir: Path = solution_directory_path / CMakeCompiler.CMAKE_BUILD_DIR
-        make_compiler_build_dir = solution_directory_path / MakeCompiler._OUTPUT_DIR_NAME
+        make_compiler_build_dir = (
+            solution_directory_path / MakeCompiler._OUTPUT_DIR_NAME
+        )
 
         if not build_dir.exists():
-            raise CompilationException("The executables directory doesn’t exist within the solution")
+            raise CompilationException(
+                "The executables directory doesn’t exist within the solution"
+            )
 
         if build_dir != make_compiler_build_dir:
             os.link(build_dir, make_compiler_build_dir)

@@ -3,8 +3,8 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-dynamic = ["version"]
-requires-python = ">= 3.9"
+requires-python = ">= 3.12"
+version = "0.2.0"
 name = "hive_autocheck"
 dependencies = [
     "argparse",
@@ -13,6 +13,10 @@ dependencies = [
     "pytest",
     "patool",
     "python-gitlab==2.10.0",
+    "pydantic>=2.11.0",
+    "pydantic-settings>=2.8.1",
+    "wrapt>=1.17.0",
+    "deprecated>=1.2.18",
 ]
 readme = "README.md"
 description = "A framework to easily create autocheck tests for Hive exercises"
@@ -20,10 +24,20 @@ classifiers = [
     "Private :: Do Not Upload",
 ]
 
+[project.entry-points.pytest11]
+hive_autocheck = "autocheck.fixtures"
+
 [dependency-groups]
-dev = ["mypy>=1.11.2,<2", "types_requests"]
+dev = [
+    "mypy>=1.11.2,<2",
+    "ruff>=0.11.2",
+    "types-decorator>=5.2.0.20250324",
+    "types-requests",
+]
 
 [tool.mypy]
+plugins = ['pydantic.mypy']
+
 # Ensure full coverage
 disallow_untyped_calls = 1
 disallow_untyped_defs = 1
@@ -50,5 +64,3 @@ no_implicit_optional = 1
 ignore_missing_imports = 0
 disallow_any_unimported = 1
 
-[tool.setuptools.dynamic]
-version = { attr = "autocheck.__version__" }

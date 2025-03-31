@@ -2,11 +2,10 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
 
+from ..path_utils import push_dir
 from .compiler import Compiler
 from .exceptions import CompilationException
-from ..path_utils import push_dir
 
 
 class MakeCompiler(Compiler):
@@ -14,22 +13,22 @@ class MakeCompiler(Compiler):
     Compiler for exercises compiled with make.
     Currently support gcc, g++ and clang.
     """
+
     _COMPILATION_FAILURE_RETURN_VALUE = 2
     _MAKEFILE_POSSIBLE_NAMES = ["makefile", "Makefile"]
-    _OUTPUT_DIR_NAME = 'bin'
+    _OUTPUT_DIR_NAME = "bin"
 
     @staticmethod
-    def compile(solution_directory_path: Path, exercise_name: Optional[str] = None) -> Tuple[int, bytes, bytes]:
+    def compile(
+        solution_directory_path: Path, exercise_name: str | None = None
+    ) -> tuple[int, bytes, bytes]:
         logging.info("compile with MakeCompiler")
 
         MakeCompiler.validate_makefile_exists(solution_directory_path)
 
         with push_dir(solution_directory_path):
             proc = subprocess.Popen(
-                [f'make'],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=True
+                ["make"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
             )
 
         out, err = proc.communicate()
@@ -50,7 +49,9 @@ class MakeCompiler(Compiler):
         bin_dir_path: Path = solution_directory_path / MakeCompiler._OUTPUT_DIR_NAME
 
         if not bin_dir_path.exists():
-            raise CompilationException("The executables directory doesn’t exist within the solution")
+            raise CompilationException(
+                "The executables directory doesn’t exist within the solution"
+            )
 
         files_in_bin_dir = os.listdir(bin_dir_path)
         if len(files_in_bin_dir) == 1:
@@ -61,9 +62,13 @@ class MakeCompiler(Compiler):
                 return bin_dir_path / file_name
 
         raise CompilationException(
-            "The executables directory should contain a file named like the exercise in one word, or exactly 1 file")
+            "The executables directory should contain a file named like the exercise in one word, or exactly 1 file"
+        )
 
     @staticmethod
     def validate_makefile_exists(solution_directory_path: Path) -> None:
-        if not any((solution_directory_path / makefile).exists() for makefile in MakeCompiler._MAKEFILE_POSSIBLE_NAMES):
+        if not any(
+            (solution_directory_path / makefile).exists()
+            for makefile in MakeCompiler._MAKEFILE_POSSIBLE_NAMES
+        ):
             raise CompilationException("No makefile found.")
