@@ -11,8 +11,9 @@ from autocheck.input import AutocheckInput
 
 
 @pytest.fixture(scope="session")
-def __save_input_file(
-    autocheck_input: AutocheckInput, original_file_path: Path | None
+def _save_input_file(
+    autocheck_input: AutocheckInput,
+    original_file_path: Path | None,
 ) -> None:
     if not original_file_path or not autocheck_input.file:
         return
@@ -24,8 +25,10 @@ def __save_input_file(
 
 
 @pytest.fixture(scope="session")
-def __extract_file_to_disk(
-    original_file_path: Path, extracted_path: Path | None, __save_input_file: None
+def _extract_file_to_disk(
+    original_file_path: Path,
+    extracted_path: Path | None,
+    _save_input_file: None,
 ) -> None:
     if not extracted_path:
         # Not an archive or no file submitted
@@ -36,8 +39,9 @@ def __extract_file_to_disk(
 
 
 @pytest.fixture(scope="session", autouse=True)
-def __setup_teardown(
-    __extract_file_to_disk: None, exercise: Exercise
+def _setup_teardown(
+    _extract_file_to_disk: None,
+    exercise: Exercise,
 ) -> Generator[None, None, None]:
     yield
     write_output(exercise)

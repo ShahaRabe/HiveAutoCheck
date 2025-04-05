@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 import requests
 import urllib3
 from pydantic import HttpUrl
@@ -15,7 +17,7 @@ class HiveClient:
         self.session = requests.session()
         if not url.username or not url.password:
             raise ValueError(
-                "Please specify Hive's autocheck API credentials (e.g. https://<user>:<password>:<host>)"
+                "Please specify Hive's autocheck API credentials (e.g. https://<user>:<password>:<host>)",
             )
         self.token = self.login(url.username, url.password)
         self.headers = {"Authorization": f"Bearer {self.token}"}
@@ -24,20 +26,17 @@ class HiveClient:
         return self.session.get(self.host + api, headers=self.headers, verify=False)
 
     def login(self, username: str, password: str) -> str:
-        """
-        Login to server
-        @param username: The username to log in with
-        @param password: The password to log in with
-        """
         cred: dict[str, str] = {"username": username, "password": password}
         response = self.session.get(self.host + "/api/auth/session", verify=False)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise RuntimeError("Failed to login to hive!")
 
         response = self.session.post(
-            self.host + "/api/core/token/", json=cred, verify=False
+            self.host + "/api/core/token/",
+            json=cred,
+            verify=False,
         )
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise RuntimeError("Failed to get token!")
 
         return str(response.json()["access"])
@@ -49,7 +48,7 @@ class HiveClient:
 
     def retrieve_exercise_fields_by_id(self, exercise_id: int) -> list[ExerciseField]:
         response = self._get_api_response(
-            f"/api/core/course/exercises/{exercise_id}/fields/"
+            f"/api/core/course/exercises/{exercise_id}/fields/",
         )
         fields = response.json()
         return [ExerciseField.model_validate(field) for field in fields]

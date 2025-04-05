@@ -18,10 +18,12 @@ class ExerciseField(BaseModel):
 
 class GitLabOnCreationData(BaseModel):
     base_branch_name: Annotated[
-        str, Field(validation_alias=AliasChoices("baseBranchName", "base_branch_name"))
+        str,
+        Field(validation_alias=AliasChoices("baseBranchName", "base_branch_name")),
     ]
     work_branch_name: Annotated[
-        str, Field(validation_alias=AliasChoices("workBranchName", "work_branch_name"))
+        str,
+        Field(validation_alias=AliasChoices("workBranchName", "work_branch_name")),
     ]
 
 
@@ -40,7 +42,7 @@ class Exercise(BaseModel):
 
     def get_field_id(self, field_name: str) -> int:
         fields_with_name = list(
-            filter(lambda field: field.name == field_name, self.fields)
+            filter(lambda field: field.name == field_name, self.fields),
         )
 
         if not fields_with_name:

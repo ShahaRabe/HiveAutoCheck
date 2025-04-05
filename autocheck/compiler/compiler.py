@@ -1,28 +1,23 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from ..exercise import Exercise
-from .exceptions import CompilationException
+from autocheck.compiler.exceptions import CompilationError
+from autocheck.exercise import Exercise
 
 
 class Compiler(ABC):
-    """
-    A compiler for solutions of exercises
-    """
+    """A compiler for solutions of exercises."""
 
     @staticmethod
     @abstractmethod
     def compile(
-        solution_directory_path: Path, exercise_name: str | None
+        solution_directory_path: Path,
+        exercise_name: str | None,
     ) -> tuple[int, bytes, bytes]:
-        """
-        Compiles a solution
-        :param: solution_directory_path: The path to the solution
-        :param: exercise_name: Name of the exercise
+        """Compiles a solution.
+
         :returns: Compilation result and output
         """
-
-    pass
 
     @staticmethod
     @abstractmethod
@@ -31,12 +26,14 @@ class Compiler(ABC):
 
 
 def compile_and_get_executable_path(
-    cloned_repository: Path, exercise: Exercise, compiler_type: type[Compiler]
+    cloned_repository: Path,
+    exercise: Exercise,
+    compiler_type: type[Compiler],
 ) -> Path:
     result, out, err = compiler_type.compile(cloned_repository, exercise.name)
     if result == 0:
         return compiler_type.find_executable_path(cloned_repository, exercise.name)
 
     if err:
-        raise CompilationException(f"Solution build failed:\n{err.decode()}")
-    raise CompilationException(f"Solution build failed:\n{out.decode()}")
+        raise CompilationError(f"Solution build failed:\n{err.decode()}")
+    raise CompilationError(f"Solution build failed:\n{out.decode()}")

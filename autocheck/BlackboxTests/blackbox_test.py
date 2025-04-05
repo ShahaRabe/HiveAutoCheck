@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .blackbox_test_config import BlackboxTestConfig
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class TestResult:
@@ -19,7 +20,8 @@ class TestResult:
 
 @contextlib.contextmanager
 def additional_files_context(
-    additional_files: dict[Path, Path] | None, working_directory: Path
+    additional_files: dict[Path, Path] | None,
+    working_directory: Path,
 ) -> Generator[None, None, None]:
     files: dict[Path, Path] = additional_files or {}
     for src_file, dst_file in files.items():
@@ -34,7 +36,8 @@ class BlackboxTest:
 
     @staticmethod
     def check_excepted_output(
-        test_config: BlackboxTestConfig, solution_output: str
+        test_config: BlackboxTestConfig,
+        solution_output: str,
     ) -> TestResult:
         solution_output = solution_output.replace("\r", "")  # ignore CR ("\r")
 
@@ -44,15 +47,16 @@ class BlackboxTest:
             expected_output = expected_output.replace("\r", "")
             found_index = solution_output.find(expected_output, last_found_output_index)
 
-            NOT_FOUND_INDEX: int = -1
-            if found_index == NOT_FOUND_INDEX:
-                descriptive_error_message: str = (
+            not_found_index = -1
+            if found_index == not_found_index:
+                descriptive_error_message = (
                     f"Test case '{test_config.description}'\n"
                     f"Input: {test_config.input}\n"
-                    f"The output {expected_output.strip()} is not in your program output\n"
+                    f"The output {expected_output.strip()} is not "
+                    f"in your program output\n"
                 )
 
-                error_message: str = (
+                error_message = (
                     test_config.custom_error_message or descriptive_error_message
                 )
                 return TestResult(is_success=False, output=error_message)
@@ -73,7 +77,8 @@ class BlackboxTest:
         self.err = None
         self.reach_timeout = False
 
-        # On Windows, communicate adds LF automatically. But on Linux, we have to and it manually.
+        # On Windows, communicate adds LF automatically,
+        # but on Linux, we have to and it manually.
         if stdin_string and (sys.platform == "linux" or sys.platform == "linux2"):
             stdin_string += "\n"
 
@@ -109,13 +114,14 @@ class BlackboxTest:
         working_directory: Path,
         timeout_in_seconds: int = __DEFAULT_EXECUTABLE_TIMEOUT,
     ) -> TestResult:
-        logging.info("Entered test_blackbox")
+        logger.info("Entered test_blackbox")
 
         for test in test_configs:
-            logging.info(f"Running {program} with input {test.input}")
+            logger.info(f"Running {program} with input {test.input}")
 
             with additional_files_context(
-                test.additional_files_mapping, working_directory
+                test.additional_files_mapping,
+                working_directory,
             ):
                 self.run_executable_with_timeout(
                     program,
@@ -137,11 +143,13 @@ class BlackboxTest:
                 )
                 return TestResult(
                     is_success=False,
-                    output=f"Running the program {program_input_text} failed with the result code {self.process.returncode}.",
+                    output=f"Running the program {program_input_text} "
+                           f"failed with the result code {self.process.returncode}.",
                 )
 
-            test_result: TestResult = BlackboxTest.check_excepted_output(
-                test, self.stdout or ""
+            test_result = BlackboxTest.check_excepted_output(
+                test,
+                self.stdout or "",
             )
             if not test_result.is_success:
                 return test_result

@@ -33,7 +33,8 @@ __test_responses: dict[str, AutocheckResponse] = {}
 
 
 def __get_contents_array(
-    exercise: Exercise, segel_only: bool
+    exercise: Exercise,
+    segel_only: bool,  # noqa: FBT001
 ) -> list[HiveFieldContentDict]:
     contents_by_field: dict[int, list[str]] = {}
     for test, response in __test_responses.items():
@@ -63,7 +64,7 @@ def __get_contents_array(
     ]
 
 
-def __get_output_json(exercise: Exercise, segel_only: bool) -> AutocheckOutput:
+def __get_output_json(exercise: Exercise, segel_only: bool) -> AutocheckOutput:  # noqa: FBT001
     test_responses = [
         resp for resp in __test_responses.values() if resp.segel_only == segel_only
     ]
@@ -92,17 +93,20 @@ def write_output(exercise: Exercise) -> None:
     if has_hanich_view:
         data.append(__get_output_json(exercise, segel_only=False).model_dump())
 
-    with open(settings.hive_output_json_path, "w", encoding="utf-8") as output_file:
+    with settings.hive_output_json_path.open("w", encoding="utf-8") as output_file:
         json.dump(data, output_file)
 
 
 def __add_error_response() -> None:
-    framework_error_message = "One or more of your autochecks failed!\nPlease see autocheck logs for more info..."
+    framework_error_message = ("One or more of your autochecks failed!\n"
+                               "Please see autocheck logs for more info...")
 
     contents = [ContentDescriptor(framework_error_message, None)]
 
     __test_responses["Hive-Tester-Framework"] = AutocheckResponse(
-        contents, ResponseType.Redo, segel_only=True
+        contents,
+        ResponseType.Redo,
+        segel_only=True,
     )
 
 
@@ -128,22 +132,23 @@ def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
                     case AutocheckResponse():
                         logger.debug("An AutocheckResponse was returned")
                     case _:
-                        raise ValueError(
-                            "An autocheck must return an AutocheckResponse or a boolean"
+                        raise ValueError(  # noqa: TRY301
+                            "An autocheck must return an "
+                            "AutocheckResponse or a boolean",
                         )
 
                 __test_responses[test_title or wrapped.__name__] = response
 
-        except:
+        except Exception:
             logger.exception("An autocheck has raised an exception")
             __add_error_response()
 
     return wrapper  # type: ignore
 
 
-def bool_to_response(boolean: bool) -> AutocheckResponse:
-    """
-    Basic transformation of boolean result to AutocheckResponse without specific content
+def bool_to_response(boolean: bool) -> AutocheckResponse:  # noqa: FBT001
+    """Basic transformation of boolean result to a simple AutocheckResponse.
+
     Not fit for hanich's eyes
     """
     return AutocheckResponse(
@@ -154,8 +159,8 @@ def bool_to_response(boolean: bool) -> AutocheckResponse:
 
 @deprecated(version="0.2.0", reason="Use `@autocheck()` instead")
 def boolean_test(func: Callable[..., bool]) -> Callable[..., AutocheckResponse]:
-    """
-    Decorator to convert a boolean function to a test that can be fed to @autocheck
+    """Convert a boolean function to a test that can be fed to @autocheck.
+
     Uses bool_to_response, so also not fit for hanich's eyes
     """
 

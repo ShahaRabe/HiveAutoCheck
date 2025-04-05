@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     hanich_repository_url_exercise_field_name: str = "repository_url"
     hanich_repository_branch_name: str = "dev"
     hanich_repository_branch_type: HanichRepositoryBranchType | None = None
-    """If set, the branch name will be taken from `on_creation_data` according to the type"""
+    """Branch will be set from `on_creation_data` according to the type."""
 
     logging_level: Annotated[str, StringConstraints(to_upper=True)] = "WARNING"
 

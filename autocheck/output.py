@@ -1,5 +1,4 @@
 from enum import StrEnum
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -11,7 +10,7 @@ class ResponseType(StrEnum):
     Done = "Done"
     Redo = "Redo"
 
-    def __lt__(self, other: Any) -> bool:
+    def __lt__(self, other: "ResponseType") -> bool:
         ordering = {
             ResponseType.AutoCheck: 0,
             ResponseType.Done: 1,
