@@ -111,7 +111,7 @@ _AutocheckCallable = Callable[..., AutocheckResponse | bool | None]
 
 def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
     # https://wrapt.readthedocs.io/en/master/decorators.html#decorators-with-arguments
-    @wrapt.decorator
+    @wrapt.decorator  # type: ignore
     def wrapper(
         wrapped: _AutocheckCallable,
         _: object | None,
@@ -134,11 +134,11 @@ def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
 
                 __test_responses[test_title or wrapped.__name__] = response
 
-        except Exception:
+        except:
             logger.exception("An autocheck has raised an exception")
             __add_error_response()
 
-    return wrapper
+    return wrapper  # type: ignore
 
 
 def bool_to_response(boolean: bool) -> AutocheckResponse:
