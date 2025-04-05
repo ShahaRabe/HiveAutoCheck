@@ -3,7 +3,7 @@ import urllib.parse
 from pathlib import Path
 
 import gitlab
-from gitlab.v4.objects import Group, GroupProject, User, Project
+from gitlab.v4.objects import Group, GroupProject, Project, User
 
 _URL_PATH_SEPARATOR = "/"
 

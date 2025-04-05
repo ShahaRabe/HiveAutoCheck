@@ -3,8 +3,8 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 
-class InputJSON(BaseModel):  # TODO: Consider renaming to `AutocheckInput`
-    """The input file mounted by Hive.
+class AutocheckInput(BaseModel):
+    """Autocheck input mounted by Hive.
 
     The exact structure is derived
     from:    `autocheck/autocheck/check/checker.py`

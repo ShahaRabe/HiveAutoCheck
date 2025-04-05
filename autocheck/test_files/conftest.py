@@ -7,17 +7,19 @@ import pytest
 
 from autocheck.autocheck import write_output
 from autocheck.exercise import Exercise
-from autocheck.input_json import InputJSON
+from autocheck.input import AutocheckInput
 
 
 @pytest.fixture(scope="session")
-def __save_input_file(input_json: InputJSON, original_file_path: Path | None) -> None:
-    if not original_file_path or not input_json.file:
+def __save_input_file(
+    autocheck_input: AutocheckInput, original_file_path: Path | None
+) -> None:
+    if not original_file_path or not autocheck_input.file:
         return
 
     original_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    content = base64.b64decode(input_json.file)
+    content = base64.b64decode(autocheck_input.file)
     original_file_path.write_bytes(content)
 
 

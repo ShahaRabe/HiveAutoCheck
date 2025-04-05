@@ -1,5 +1,6 @@
 import requests
 import urllib3
+from pydantic import HttpUrl
 from urllib3.exceptions import InsecureRequestWarning
 
 from .assignment import Assignment
@@ -8,11 +9,15 @@ from .exercise import Exercise, ExerciseField
 urllib3.disable_warnings(InsecureRequestWarning)
 
 
-class HiveAPI:
-    def __init__(self, host: str, username: str, password: str) -> None:
-        self.host = host
+class HiveClient:
+    def __init__(self, url: HttpUrl) -> None:
+        self.host = f"{url.scheme}://{url.host}:{url.port}"
         self.session = requests.session()
-        self.token = self.login(username, password)
+        if not url.username or not url.password:
+            raise ValueError(
+                "Please specify Hive's autocheck API credentials (e.g. https://<user>:<password>:<host>)"
+            )
+        self.token = self.login(url.username, url.password)
         self.headers = {"Authorization": f"Bearer {self.token}"}
 
     def _get_api_response(self, api: str) -> requests.Response:

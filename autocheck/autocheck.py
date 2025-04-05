@@ -9,7 +9,7 @@ import wrapt
 from deprecated import deprecated
 
 from .exercise import Exercise, FieldType
-from .output_json import HiveFieldContentDict, OutputJSON, ResponseType
+from .output import AutocheckOutput, HiveFieldContentDict, ResponseType
 from .settings import settings
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def __get_contents_array(
     ]
 
 
-def __get_output_json(exercise: Exercise, segel_only: bool) -> OutputJSON:
+def __get_output_json(exercise: Exercise, segel_only: bool) -> AutocheckOutput:
     test_responses = [
         resp for resp in __test_responses.values() if resp.segel_only == segel_only
     ]
@@ -74,7 +74,7 @@ def __get_output_json(exercise: Exercise, segel_only: bool) -> OutputJSON:
     response_type = max(current_response_types)
     hide_checker_name = any(current_checker_name)
 
-    return OutputJSON(
+    return AutocheckOutput(
         contents=__get_contents_array(exercise, segel_only),
         type=response_type,
         segel_only=segel_only,

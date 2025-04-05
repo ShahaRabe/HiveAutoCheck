@@ -20,7 +20,7 @@ class ResponseType(StrEnum):
         return ordering[self] < ordering[other]
 
 
-class OutputJSON(BaseModel):  # TODO: Consider renaming to `AutocheckInput`
+class AutocheckOutput(BaseModel):
     type: ResponseType
     segel_only: bool = True
     hide_checker_name: bool = True

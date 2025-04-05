@@ -1,13 +1,14 @@
-import json
 import logging
-from pathlib import Path
 
 import pytest
 
-from autocheck.hive import HiveAPI
+from autocheck.hive import HiveClient
 
-from .exercise import Exercise
-from .fixtures import TESTS_FILES_DIRECTORY, get_input_json
+from .fixtures import (
+    TESTS_FILES_DIRECTORY,
+    get_autocheck_input,
+    get_exercise_test_metadata,
+)
 from .gitlab_client.gitlab_client import GitlabClient
 from .settings import settings
 
@@ -17,19 +18,6 @@ def clone_tests_repository(
 ) -> None:
     segel_gitlab_client = GitlabClient(gitlab_host, gitlab_token)
     segel_gitlab_client.clone(repository_url, TESTS_FILES_DIRECTORY, repository_ref)
-
-
-def get_tests_to_run(exercise: Exercise) -> list[str]:
-    exercise_relative_path: Path = Path(exercise.subject_name) / exercise.module_name
-    metadata_file_path = (
-        TESTS_FILES_DIRECTORY / "metadata" / exercise_relative_path / "tests_list.json"
-    )
-
-    with metadata_file_path.open() as metadata_file:
-        return [
-            str(TESTS_FILES_DIRECTORY / test)
-            for test in json.load(metadata_file)[exercise.name]
-        ]
 
 
 def main() -> None:
@@ -42,14 +30,14 @@ def main() -> None:
         settings.tests_repository_ref,
     )
 
-    input_json = get_input_json()
-
-    hive_client = HiveAPI(
-        str(settings.hive_host), settings.hive_api_user, settings.hive_api_pass
+    autocheck_input = get_autocheck_input()
+    exercise = HiveClient(settings.hive_url).get_exercise_by_assignment_id(
+        autocheck_input.assignment_id
     )
 
-    exercise = hive_client.get_exercise_by_assignment_id(input_json.assignment_id)
-    tests = get_tests_to_run(exercise)
+    exercise_test_metadata = get_exercise_test_metadata(exercise)
+    tests = [str(TESTS_FILES_DIRECTORY / test) for test in exercise_test_metadata.tests]
+
     pytest.main(["--rootdir", str(TESTS_FILES_DIRECTORY), "-o", "log_cli=1"] + tests)
 
 
