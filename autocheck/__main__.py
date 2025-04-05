@@ -4,10 +4,11 @@ from pathlib import Path
 
 import pytest
 
+from autocheck.hive import HiveAPI
+
 from .exercise import Exercise
-from .fixtures import TESTS_FILES_DIRECTORY, get_exercise_from_input, get_input_file
+from .fixtures import TESTS_FILES_DIRECTORY, get_input_json
 from .gitlab_client.gitlab_client import GitlabClient
-from .input_json import InputJSON
 from .settings import settings
 
 
@@ -20,13 +21,14 @@ def clone_tests_repository(
 
 def get_tests_to_run(exercise: Exercise) -> list[str]:
     exercise_relative_path: Path = Path(exercise.subject_name) / exercise.module_name
-    metadata_file_path: Path = (
+    metadata_file_path = (
         TESTS_FILES_DIRECTORY / "metadata" / exercise_relative_path / "tests_list.json"
     )
 
-    with open(metadata_file_path) as f:
+    with metadata_file_path.open() as metadata_file:
         return [
-            str(TESTS_FILES_DIRECTORY / test) for test in json.load(f)[exercise.name]
+            str(TESTS_FILES_DIRECTORY / test)
+            for test in json.load(metadata_file)[exercise.name]
         ]
 
 
@@ -40,9 +42,14 @@ def main() -> None:
         settings.tests_repository_ref,
     )
 
-    input_json_file: InputJSON = get_input_file()
-    exercise_data: Exercise = get_exercise_from_input(input_json_file)
-    tests: list[str] = get_tests_to_run(exercise_data)
+    input_json = get_input_json()
+
+    hive_client = HiveAPI(
+        str(settings.hive_host), settings.hive_api_user, settings.hive_api_pass
+    )
+
+    exercise = hive_client.get_exercise_by_assignment_id(input_json.assignment_id)
+    tests = get_tests_to_run(exercise)
     pytest.main(["--rootdir", str(TESTS_FILES_DIRECTORY), "-o", "log_cli=1"] + tests)
 
 

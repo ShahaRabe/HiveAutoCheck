@@ -1,8 +1,7 @@
-import builtins
 import json
 import logging
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from functools import wraps
 from typing import Any
 
@@ -46,7 +45,7 @@ def __get_contents_array(
                 field_names = [
                     field.name
                     for field in exercise.fields
-                    if field.has_value and field.type == FieldType.Text
+                    if field.has_value and field.type == FieldType.TEXT
                 ]
             else:
                 field_names = [desc.field_name]
@@ -64,7 +63,7 @@ def __get_contents_array(
     ]
 
 
-def __get_response_json(exercise: Exercise, segel_only: bool) -> dict[str, Any]:
+def __get_output_json(exercise: Exercise, segel_only: bool) -> OutputJSON:
     test_responses = [
         resp for resp in __test_responses.values() if resp.segel_only == segel_only
     ]
@@ -75,13 +74,11 @@ def __get_response_json(exercise: Exercise, segel_only: bool) -> dict[str, Any]:
     response_type = max(current_response_types)
     hide_checker_name = any(current_checker_name)
 
-    return asdict(
-        OutputJSON(
-            contents=__get_contents_array(exercise, segel_only),
-            type=response_type,
-            segel_only=segel_only,
-            hide_checker_name=hide_checker_name,
-        )
+    return OutputJSON(
+        contents=__get_contents_array(exercise, segel_only),
+        type=response_type,
+        segel_only=segel_only,
+        hide_checker_name=hide_checker_name,
     )
 
 
@@ -91,9 +88,9 @@ def write_output(exercise: Exercise) -> None:
     has_segel_only = any(res.segel_only for res in __test_responses.values())
     has_hanich_view = any(not res.segel_only for res in __test_responses.values())
     if has_segel_only:
-        data.append(__get_response_json(exercise, segel_only=True))
+        data.append(__get_output_json(exercise, segel_only=True).model_dump())
     if has_hanich_view:
-        data.append(__get_response_json(exercise, segel_only=False))
+        data.append(__get_output_json(exercise, segel_only=False).model_dump())
 
     with open(settings.hive_output_json_path, "w", encoding="utf-8") as output_file:
         json.dump(data, output_file)

@@ -28,12 +28,12 @@ class GitlabClient:
 
     def clone(self, url: str, dir_path: Path, branch_name: str) -> None:
         group_name, project_name = GitlabClient.__parse_url(url)
-        logging.debug(f"cloning {url}, using ({group_name=}, {project_name=})")
+        logging.debug(f"Cloning {url}, using ({group_name=}, {project_name=})")
 
         group = self.find_group(group_name) or self.find_user(group_name)
 
         if group is None:
-            logging.error(f"unable to get group from {url}")
+            logging.error(f"Unable to get group from {url}")
             raise Exception(
                 f"Could not find group, non-Recoverable! {url=}, {group_name=}"
             )
@@ -48,7 +48,7 @@ class GitlabClient:
         projects = group.projects.list(search=project_name)
         project = projects[0] if len(projects) > 0 else None
         if not project:
-            raise Exception(f"Could not find project from {group=}. Non-Recoverable!!!")
+            raise ValueError(f"Could not find project from {group=}. Non-Recoverable!")
         return project
 
     @staticmethod

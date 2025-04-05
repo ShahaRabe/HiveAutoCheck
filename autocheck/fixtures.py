@@ -1,13 +1,15 @@
 import json
+import logging
 import os.path
+import re
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
 
 import patoolib
 import pytest
 
+from .assignment import Assignment
 from .BlackboxTests.blackbox_test_config import BlackboxTestConfig
 from .compiler.cmake_compiler import CMakeCompiler
 from .compiler.compiler import Compiler
@@ -17,7 +19,7 @@ from .exercise import Exercise
 from .gitlab_client.gitlab_client import GitlabClient
 from .hive import HiveAPI
 from .input_json import InputJSON
-from .settings import settings
+from .settings import HanichRepositoryBranchType, settings
 
 __ORIGINAL_FILE_DIRECTORY: Path = Path("/tmp/exercise_files/original")
 TESTS_FILES_DIRECTORY: Path = (
@@ -25,28 +27,31 @@ TESTS_FILES_DIRECTORY: Path = (
 )
 
 
-def get_input_file() -> InputJSON:
+def get_input_json() -> InputJSON:
     with open(settings.hive_input_json_path, encoding="utf-8") as input_file:
-        content: dict[str, Any] = json.load(input_file)
-        return InputJSON(**content)
+        return InputJSON.model_validate(json.load(input_file))
 
 
 @pytest.fixture(scope="session")
 def input_json() -> InputJSON:
-    return get_input_file()
-
-
-def get_exercise_from_input(input_json: InputJSON) -> Exercise:
-    hive = HiveAPI(
-        str(settings.hive_host), settings.hive_api_user, settings.hive_api_pass
-    )
-    exercise_id: int = hive.get_exercise_id_by_assignment_id(input_json.assignment_id)
-    return hive.get_exercise_by_id(exercise_id)
+    return get_input_json()
 
 
 @pytest.fixture(scope="session")
-def exercise(input_json: InputJSON) -> Exercise:
-    return get_exercise_from_input(input_json)
+def hive_client() -> HiveAPI:
+    return HiveAPI(
+        str(settings.hive_host), settings.hive_api_user, settings.hive_api_pass
+    )
+
+
+@pytest.fixture(scope="session")
+def exercise(hive_client: HiveAPI, input_json: InputJSON) -> Exercise:
+    return hive_client.get_exercise_by_assignment_id(input_json.assignment_id)
+
+
+@pytest.fixture(scope="session")
+def assignment(hive_client: HiveAPI, input_json: InputJSON) -> Assignment:
+    return hive_client.get_assignment_by_id(input_json.assignment_id)
 
 
 @pytest.fixture(scope="session")
@@ -59,8 +64,26 @@ def original_file_path(input_json: InputJSON) -> Path | None:
 
 
 @pytest.fixture(scope="session")
-def submitted_repository_url(input_json: InputJSON) -> str | None:
-    return input_json.get_field_content("repository_url")
+def hanich_repository_url(assignment: Assignment, input_json: InputJSON) -> str | None:
+    """Attempts to find the hanich's Git clone URL of the current assignment.
+
+    Hive's Assignment Service places the URL inside the assignment's description,
+    if the URL is not found there, we fall back to an exercise field that can be configured,
+    if both are missing, we return None.
+
+    We're parsing the description instead of building the URL on our own because we
+    don't have access to the hanich's number and for future compatibility.
+    """
+
+    match = re.search(r"https://[^\s)]+\.git", assignment.description)
+    if match:
+        return match.group()
+    else:
+        logging.warning(
+            f"No Git clone URL was found in the assignment's description, "
+            f"falling back to an exercise field named `{settings.hanich_repository_url_exercise_field_name}`"
+        )
+        return input_json.get_field_content("repository_url")
 
 
 @pytest.fixture(scope="session")
@@ -77,10 +100,26 @@ def temp_directory() -> Generator[Path, None, None]:
 @pytest.fixture(scope="session")
 def cloned_repository(
     hanich_gitlab_client: GitlabClient,
-    submitted_repository_url: str,
+    hanich_repository_url: str,
     temp_directory: Path,
+    exercise: Exercise,
 ) -> Path:
-    hanich_gitlab_client.clone(submitted_repository_url, temp_directory, "main")
+    if settings.hanich_repository_branch_type is not None:
+        if exercise.on_creation_data.gitlab is None:
+            raise ValueError(
+                "Hanich repository branch type is set while on_creation_data's gitlab field is missing"
+            )
+        match settings.hanich_repository_branch_type:
+            case HanichRepositoryBranchType.WORK:
+                branch_name = exercise.on_creation_data.gitlab.work_branch_name
+            case HanichRepositoryBranchType.BASE:
+                branch_name = exercise.on_creation_data.gitlab.base_branch_name
+            case _:
+                raise ValueError("Invalid `hanich_repository_branch_type`")
+    else:
+        branch_name = settings.hanich_repository_branch_name
+
+    hanich_gitlab_client.clone(hanich_repository_url, temp_directory, branch_name)
     return temp_directory
 
 

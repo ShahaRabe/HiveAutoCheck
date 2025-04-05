@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 requires-python = ">= 3.12"
-version = "0.2.0"
+version = "0.2.1"
 name = "hive_autocheck"
 dependencies = [
     "argparse",
@@ -33,6 +33,11 @@ dev = [
     "ruff>=0.11.2",
     "types-decorator>=5.2.0.20250324",
     "types-requests",
+]
+
+[tool.ruff.lint]
+select = [
+    "I"
 ]
 
 [tool.mypy]

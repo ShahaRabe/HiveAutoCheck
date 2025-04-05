@@ -1,13 +1,10 @@
-from dataclasses import dataclass
 from typing import Any, Literal
 
+from pydantic import BaseModel
 
-@dataclass
-class InputJSON:
-    """
-    This class represents the structure of the JSON file
-    written by Hive to `/mnt/autocheck/input.json` inside the
-    autocheck docker container.
+
+class InputJSON(BaseModel):  # TODO: Consider renaming to `AutocheckInput`
+    """The input file mounted by Hive.
 
     The exact structure is derived
     from:    `autocheck/autocheck/check/checker.py`
