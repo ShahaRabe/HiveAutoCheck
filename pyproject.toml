@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 requires-python = ">= 3.12"
-version = "0.2.0"
+version = "0.2.1"
 name = "hive_autocheck"
 dependencies = [
     "argparse",
@@ -32,7 +32,22 @@ dev = [
     "mypy>=1.11.2,<2",
     "ruff>=0.11.2",
     "types-decorator>=5.2.0.20250324",
+    "types-deprecated>=1.2.15.20250304",
     "types-requests",
+]
+
+[tool.ruff.lint]
+select = [
+    "ALL"
+]
+
+ignore = [
+    "D",
+    "S",       # flake8-bandit (security)
+    "EM102",   # f-string-in-exception
+    "G004",    # logging-f-string
+    "TRY003",  # raise-vanilla-args
+    "EM101",   # raw-string-in-exception
 ]
 
 [tool.mypy]

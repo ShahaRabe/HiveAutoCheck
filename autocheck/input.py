@@ -1,13 +1,10 @@
-from dataclasses import dataclass
 from typing import Any, Literal
 
+from pydantic import BaseModel
 
-@dataclass
-class InputJSON:
-    """
-    This class represents the structure of the JSON file
-    written by Hive to `/mnt/autocheck/input.json` inside the
-    autocheck docker container.
+
+class AutocheckInput(BaseModel):
+    """Autocheck input mounted by Hive.
 
     The exact structure is derived
     from:    `autocheck/autocheck/check/checker.py`
@@ -32,13 +29,13 @@ class InputJSON:
 
     def get_field_content(self, field_name: str) -> str | None:
         entries = list(
-            filter(lambda entry: entry["name"] == field_name, self.form_fields)
+            filter(lambda entry: entry["name"] == field_name, self.form_fields),
         )
         if len(entries) == 0:
             return None
 
         entry_id: int = entries[0]["id"]
         content: str = next(
-            filter(lambda entry: entry["field"] == entry_id, self.contents)
+            filter(lambda entry: entry["field"] == entry_id, self.contents),
         )["content"]
         return content

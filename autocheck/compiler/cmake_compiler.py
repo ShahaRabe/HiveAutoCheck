@@ -1,25 +1,25 @@
 import os
 import subprocess
+import typing
 from pathlib import Path
 
-from ..path_utils import push_dir
-from .exceptions import CompilationException
-from .make_compiler import MakeCompiler
+from autocheck.compiler.exceptions import CompilationError
+from autocheck.compiler.make_compiler import MakeCompiler
+from autocheck.path_utils import push_dir
 
 
 class CMakeCompiler(MakeCompiler):
-    """
-    Compiler for exercises compiled with cmake.
-    """
+    """Compiler for exercises compiled with cmake."""
 
-    CMAKE_COMMAND = ["/usr/bin/cmake", "../"]
-    MAKE_COMMAND = ["make"]
+    CMAKE_COMMAND: typing.ClassVar = ["/usr/bin/cmake", "../"]
+    MAKE_COMMAND: typing.ClassVar = ["make"]
     COMPILATION_SUCCESS_RETURN_VALUE = 0
     CMAKE_BUILD_DIR = "build"
 
     @staticmethod
     def compile(
-        solution_directory_path: Path, exercise_name: str | None = None
+        solution_directory_path: Path,
+        exercise_name: str | None = None,
     ) -> tuple[int, bytes, bytes]:
         build_dir = solution_directory_path / CMakeCompiler.CMAKE_BUILD_DIR
         build_dir.mkdir(parents=True, exist_ok=True)
@@ -34,11 +34,13 @@ class CMakeCompiler(MakeCompiler):
 
         out, err = proc.communicate()
         if proc.returncode != CMakeCompiler.COMPILATION_SUCCESS_RETURN_VALUE:
-            raise CompilationException(
-                f"Running cmake failed with return code {proc.returncode}.\n\n"
-                f"Compilation stdout:\n"
-                f"{out.decode()}\n\n"
-                f"Compilation stderr:\n{err.decode()}"
+            raise CompilationError(
+                (
+                    f"Running cmake failed with return code {proc.returncode}.\n\n"
+                    f"Compilation stdout:\n"
+                    f"{out.decode()}\n\n"
+                    f"Compilation stderr:\n{err.decode()}"
+                ),
             )
 
         return MakeCompiler.compile(build_dir, exercise_name)
@@ -48,12 +50,12 @@ class CMakeCompiler(MakeCompiler):
         exercise_name = "".join(exercise_name.lower().split())
         build_dir: Path = solution_directory_path / CMakeCompiler.CMAKE_BUILD_DIR
         make_compiler_build_dir = (
-            solution_directory_path / MakeCompiler._OUTPUT_DIR_NAME
+            solution_directory_path / MakeCompiler.OUTPUT_DIR_NAME
         )
 
         if not build_dir.exists():
-            raise CompilationException(
-                "The executables directory doesn’t exist within the solution"
+            raise CompilationError(
+                "The executables directory doesn't exist within the solution",
             )
 
         if build_dir != make_compiler_build_dir:

@@ -76,9 +76,7 @@ If any test throws you'd be noticed by a `segel_only` response by the infrastruc
 ```Dockerfile
 FROM autocheck:latest
 
-ENV HIVE_API_USER=<hive-user>
-ENV HIVE_API_PASS=<hive-password>
-ENV HIVE_HOST=https://<hive-ip>
+ENV HIVE_URL=https://<user>:<password>:<host>
 
 ENV HANICH_GITLAB_HOST=https://<hanich-gitlab-host>
 ENV HANICH_GITLAB_TOKEN=<hanich-gitlab-token>
@@ -126,19 +124,28 @@ def test_files(submitted_file: Optional[bytes], original_file_path: Optional[Pat
 
 ## And Where Do I Put My Tests?
 
-Place your tests in a file (or files) under the `tests` directory. Then under the `metadata` folder create subfolders according to the path of the exercise in Hive (`<subject>/<module>`) and create a `json` file called `tests_list.json` which will contain an array of files or tests for each exercise.
+Place your tests in a file (or files) under the `tests` directory. Then under the `metadata` folder create subfolders according to the path of the exercise in Hive (`<subject>/<module>`) and create a file called `exercises.json` which will contain metadata for each exercise.
+
+> An exercise metadata can include:
+> - `tests` - array of files or tests to run for that test
+> - `hanich_repository_branch_name` - override the default branch name
 
 
-### Example `tests_list.json`
+### Example `exercises.json`
 
 ```json
 {
-    "Foo": [
-        "test_files/tests/foo.py",
-        "test_files/tests/bar.py::test_baz"
+  "Foo": {
+    "tests": [
+      "foo.py",
+      "bar.py::test_baz"
     ],
-    "Oof": [
-        "test_files/tests/oof.py::test_oof"
+    "hanich_repository_branch_name": "main"
+  },
+  "Oof": {
+    "tests": [
+      "oof.py::test_oof"
     ]
+  }
 }
 ```

@@ -1,8 +1,7 @@
-import builtins
 import json
 import logging
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from functools import wraps
 from typing import Any
 
@@ -10,7 +9,7 @@ import wrapt
 from deprecated import deprecated
 
 from .exercise import Exercise, FieldType
-from .output_json import HiveFieldContentDict, OutputJSON, ResponseType
+from .output import AutocheckOutput, HiveFieldContentDict, ResponseType
 from .settings import settings
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,8 @@ __test_responses: dict[str, AutocheckResponse] = {}
 
 
 def __get_contents_array(
-    exercise: Exercise, segel_only: bool
+    exercise: Exercise,
+    segel_only: bool,  # noqa: FBT001
 ) -> list[HiveFieldContentDict]:
     contents_by_field: dict[int, list[str]] = {}
     for test, response in __test_responses.items():
@@ -46,7 +46,7 @@ def __get_contents_array(
                 field_names = [
                     field.name
                     for field in exercise.fields
-                    if field.has_value and field.type == FieldType.Text
+                    if field.has_value and field.type == FieldType.TEXT
                 ]
             else:
                 field_names = [desc.field_name]
@@ -64,7 +64,7 @@ def __get_contents_array(
     ]
 
 
-def __get_response_json(exercise: Exercise, segel_only: bool) -> dict[str, Any]:
+def __get_output_json(exercise: Exercise, segel_only: bool) -> AutocheckOutput:  # noqa: FBT001
     test_responses = [
         resp for resp in __test_responses.values() if resp.segel_only == segel_only
     ]
@@ -75,13 +75,11 @@ def __get_response_json(exercise: Exercise, segel_only: bool) -> dict[str, Any]:
     response_type = max(current_response_types)
     hide_checker_name = any(current_checker_name)
 
-    return asdict(
-        OutputJSON(
-            contents=__get_contents_array(exercise, segel_only),
-            type=response_type,
-            segel_only=segel_only,
-            hide_checker_name=hide_checker_name,
-        )
+    return AutocheckOutput(
+        contents=__get_contents_array(exercise, segel_only),
+        type=response_type,
+        segel_only=segel_only,
+        hide_checker_name=hide_checker_name,
     )
 
 
@@ -91,21 +89,24 @@ def write_output(exercise: Exercise) -> None:
     has_segel_only = any(res.segel_only for res in __test_responses.values())
     has_hanich_view = any(not res.segel_only for res in __test_responses.values())
     if has_segel_only:
-        data.append(__get_response_json(exercise, segel_only=True))
+        data.append(__get_output_json(exercise, segel_only=True).model_dump())
     if has_hanich_view:
-        data.append(__get_response_json(exercise, segel_only=False))
+        data.append(__get_output_json(exercise, segel_only=False).model_dump())
 
-    with open(settings.hive_output_json_path, "w", encoding="utf-8") as output_file:
+    with settings.hive_output_json_path.open("w", encoding="utf-8") as output_file:
         json.dump(data, output_file)
 
 
 def __add_error_response() -> None:
-    framework_error_message = "One or more of your autochecks failed!\nPlease see autocheck logs for more info..."
+    framework_error_message = ("One or more of your autochecks failed!\n"
+                               "Please see autocheck logs for more info...")
 
     contents = [ContentDescriptor(framework_error_message, None)]
 
     __test_responses["Hive-Tester-Framework"] = AutocheckResponse(
-        contents, ResponseType.Redo, segel_only=True
+        contents,
+        ResponseType.Redo,
+        segel_only=True,
     )
 
 
@@ -114,7 +115,7 @@ _AutocheckCallable = Callable[..., AutocheckResponse | bool | None]
 
 def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
     # https://wrapt.readthedocs.io/en/master/decorators.html#decorators-with-arguments
-    @wrapt.decorator
+    @wrapt.decorator  # type: ignore
     def wrapper(
         wrapped: _AutocheckCallable,
         _: object | None,
@@ -131,8 +132,9 @@ def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
                     case AutocheckResponse():
                         logger.debug("An AutocheckResponse was returned")
                     case _:
-                        raise ValueError(
-                            "An autocheck must return an AutocheckResponse or a boolean"
+                        raise ValueError(  # noqa: TRY301
+                            "An autocheck must return an "
+                            "AutocheckResponse or a boolean",
                         )
 
                 __test_responses[test_title or wrapped.__name__] = response
@@ -141,12 +143,12 @@ def autocheck(*, test_title: str | None = None) -> _AutocheckCallable:
             logger.exception("An autocheck has raised an exception")
             __add_error_response()
 
-    return wrapper
+    return wrapper  # type: ignore
 
 
-def bool_to_response(boolean: bool) -> AutocheckResponse:
-    """
-    Basic transformation of boolean result to AutocheckResponse without specific content
+def bool_to_response(boolean: bool) -> AutocheckResponse:  # noqa: FBT001
+    """Basic transformation of boolean result to a simple AutocheckResponse.
+
     Not fit for hanich's eyes
     """
     return AutocheckResponse(
@@ -157,8 +159,8 @@ def bool_to_response(boolean: bool) -> AutocheckResponse:
 
 @deprecated(version="0.2.0", reason="Use `@autocheck()` instead")
 def boolean_test(func: Callable[..., bool]) -> Callable[..., AutocheckResponse]:
-    """
-    Decorator to convert a boolean function to a test that can be fed to @autocheck
+    """Convert a boolean function to a test that can be fed to @autocheck.
+
     Uses bool_to_response, so also not fit for hanich's eyes
     """
 
