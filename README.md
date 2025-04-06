@@ -24,8 +24,8 @@ This project was written after a little pain I experienced after being part of a
 ## Technologies Chosen
 
 To integrate into hive's autochecks the obvious part was packing the whole system into a docker container.<br>
-And to make your lives easier in integrating this system into your course I chose to write it using python 3.12 and pytest (that looks at any python file not just the ones starting with test) with a bunch of prewritten fixtures.
-So the minimum work you should do is write a single test with the `@autocheck` decorator and a Dockerfile that inherits from this project's image, sets a few environemnt variables and includes your amazing test files somewhere under `/test` inside the docker (preferably a subdirectory to avoid overwriting any of the files).
+And to make your lives easier in integrating this system into your course I chose to write it using python 3.12 and pytest (that looks at any python file not just the ones starting with test) with a bunch of prewritten fixtures. Also the entire thing is built as a wheel for easy development :)<br>
+So all you need to do is write your tests in a gitlab repository, setup metadata files for the exercises you want to test and write a Dockerfile that inherits from this project's image and sets a few environemnt variables.
 
 > Wait... A bunch of fixtures?
 
@@ -45,20 +45,31 @@ Signature: `@autocheck(test_title=None)`
 
 |Fixture| Type            | Purpose                                                                                                                                                    |Scope|
 |-------|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|-----|
-|`input_json`| `InputJSON`     | Get the contents of the json given by Hive                                                                                                                 |Session|
-|`exercise`| `Exercise`      | Use Hive's API to get info about the exercise                                                                                                              |Session|
-|`original_file_path`| `Path \| None`  |The path where the file, as submitted by the student, is saved - None if no file was submitted|Session|
-|`submitted_file`| `bytes \| None` | The contents of the file submitted by the student - None is no file was submitted                                                                          |Session|
-|`extracted_path`| `Path \| None`  | The path to which the contents of the file submitted by the student is extracted to - None if no file was submitted or the file submitted is not a archive |Session|
+|`autocheck_input`|`AutocheckInput`|Get an AutocheckInput dataclass built from the json given by Hive|Session|
+|`hive_client`|`HiveClient`|A Hive API client|Session|
+|`exercise`|`Exercise`|Use Hive's API to get info about the exercise|Session|
+|`exercise_test_metadata`|`ExerciseTestMetadata`|Get the exercise's configured metadata from the configured segel git repo|Session|
+|`assignment`|`Assignment`|Use Hive's API to get info about the assignment|Session|
+|`original_file_path`|`Path \| None`|The path where the file, as submitted by the student, is saved - None if no file was submitted|Session|
+|`hanich_repository_url`|`str \| None`|Attempts to find the hanich's Git clone URL of the current assignment. First from assignemnt service' (or anything like it) message to the student in the description, then a configurable input field from the student (default `repository_url`). If both do not exist returns None|Session|
+|`hanich_gitlab_client`|`GitlabClient`|An api client against the haniches gitlab instance|Session|
+|`temp_directory`|`Path`|returns a temp directory path, this is used for the cloned repository fixture|Session|
+|`hanich_repository_branch`|`str`|Get the configured branch name, either from on_creation_data, environment variable or overriding exercise metadata. default dev|Session|
+|`cloned_repository`|`Path`|Clones the haniches repo and returns the path on disk|Session|
+|`make_compiled_executable`|`Path`|Compiles the makefile project in the haniches repository and returns the executable's path on disk|Session|
+|`cmake_compiled_executable`|`Path`|Compiles the cmake project in the haniches repository and returns the executable's path on disk|Session|
+|`blackbox_test_configs`|`list[BlackboxTestConfig]`|Parses the exercise's blackbox tests configurations from disk and returns them|Session|
+|`submitted_file`|`bytes \| None`|The contents of the file submitted by the student - None is no file was submitted|Session|
+|`extracted_path`|`Path \| None`|The path to which the contents of the file submitted by the student is extracted to - None if no file was submitted or the file submitted is not a archive|Session|
 
-More fixtures are defined in [fixtures.py](autocheck/fixtures.py), pertaining to git access, compilation and more
+Those are all existing fixtures at the time of writing these lines, more fixtures may be defined in [fixtures.py](autocheck/fixtures.py)
 
 
 ## Tell me more about the tests themselves
 
 So as mentioned you have to use the `@autocheck()` decorator.
 
-In addition, you need to return an `AutocheckResponse` object that is defined in [autocheck.py](autocheck/autocheck.py).
+In addition, you need to return __either__ an `AutocheckResponse` object that is defined in [autocheck.py](autocheck/autocheck.py) __or__ a boolean value specifying if the test was a success.
 
 The test title (either a given title or the test name by default) __MUST__ be unique as it's used as a dictionary key.
 
@@ -124,7 +135,7 @@ def test_files(submitted_file: Optional[bytes], original_file_path: Optional[Pat
 
 ## And Where Do I Put My Tests?
 
-Place your tests in a file (or files) under the `tests` directory. Then under the `metadata` folder create subfolders according to the path of the exercise in Hive (`<subject>/<module>`) and create a file called `exercises.json` which will contain metadata for each exercise.
+Place your tests in a gitlab repository in a file (or files) under a directory in the root of the project called `tests`. Under the project's root there should also be a `metadata` folder, in which you should create subfolders according to the path of the exercise in Hive (`<subject>/<module>`) and create a file called `exercises.json` which will contain metadata for each exercise.
 
 > An exercise metadata can include:
 > - `tests` - array of files or tests to run for that test
@@ -148,4 +159,18 @@ Place your tests in a file (or files) under the `tests` directory. Then under th
     ]
   }
 }
+```
+
+### Example Repository Layout
+```
+> /
+>   tests/
+>     foo.py
+>     bar.py
+>   metadata/
+>     C/
+>       pointers/
+>         exercises.json
+>       io/
+>         exercises.json
 ```
